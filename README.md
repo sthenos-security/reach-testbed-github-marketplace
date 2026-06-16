@@ -29,7 +29,9 @@ integration.
 
 For customer-facing marketplace runs, configure `MCP_GITHUB_TOKEN` as well. It
 materially improves clone/source/package context and should be treated as part
-of the expected higher-data-quality setup.
+of the expected higher-data-quality setup. Reachable uses this token for GitHub
+MCP source context and for plain git clone fallback when MCP cannot fetch a
+package source directly.
 
 | Lane | Secret |
 |------|--------|
@@ -38,10 +40,21 @@ of the expected higher-data-quality setup.
 | `anthropic-claude` | `ANTHROPIC_API_KEY` |
 | Faster clone/source/package context | `MCP_GITHUB_TOKEN` |
 
+Create `MCP_GITHUB_TOKEN` as a fine-grained PAT at
+<https://github.com/settings/personal-access-tokens/new>. Select the GitHub
+**Resource owner** that owns the source repos Reachable may inspect. Use **Only
+select repositories** for a fixed repo set, or **All repositories** when CI must
+read any current/future repo for that owner; **Public repositories** is enough
+only for public source repos. Grant **Repository permissions -> Contents:
+Read-only**; GitHub adds **Metadata: Read-only** automatically. Do not add write,
+pull request, workflow, administration, or secret permissions.
+
 GitHub Actions provides the built-in `GITHUB_TOKEN` for checkout, branch push,
 artifact upload, Pages publication, SARIF upload, and pull request creation. If
 GitHub rejects automatic PR creation, the toolkit keeps the pushed remediation
 branch and prints a manual PR path instead of hiding the auth failure.
+`MCP_GITHUB_TOKEN` is a read-only source token, not a CI control or remediation
+write token.
 
 ## Defaults
 
