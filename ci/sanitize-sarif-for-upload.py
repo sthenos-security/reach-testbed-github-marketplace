@@ -31,8 +31,15 @@ def sanitize(data: dict[str, Any]) -> int:
             if not isinstance(result, dict):
                 continue
             for location in result.get("locations") or []:
-                if isinstance(location, dict) and "logicalLocation" in location:
+                if not isinstance(location, dict):
+                    continue
+                if "logicalLocation" in location:
                     location.pop("logicalLocation", None)
+                    removed += 1
+                artifact = location.get("physicalLocation", {}).get("artifactLocation", {})
+                if isinstance(artifact, dict) and str(artifact.get("uri") or "").startswith("pkg:"):
+                    artifact["uri"] = "package-lock.json"
+                    artifact.pop("uriBaseId", None)
                     removed += 1
     return removed
 
