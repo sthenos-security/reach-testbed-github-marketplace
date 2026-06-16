@@ -49,6 +49,5 @@ jobs:
       publish_report: true
       require_ai: true
       fresh_scan: true
-      reachable_version: ""
       reachable_dist_repo: "sthenos-security/reach-dist"
     secrets: inherit

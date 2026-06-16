@@ -51,7 +51,7 @@ def _build_payload(phase: str) -> dict[str, Any]:
         "reachable_home_exists": home.exists(),
         "reachable_home_size_kb": _du_kb(home),
         "installed_version": installed,
-        "target_version": os.environ.get("REACHABLE_VERSION", ""),
+        "target_version": "latest",
         "repo_db_count": len(dbs),
         "latest_repo_db_hash": _sha256(latest_db) if latest_db else "",
         "latest_repo_db_size_kb": _du_kb(latest_db) if latest_db else 0,
@@ -187,8 +187,8 @@ def _print_block(payload: dict[str, Any], out_path: Path) -> None:
     print(f"  REACHABLE_CACHE_SOURCE={payload.get('cache_source') or 'n/a'}")
     print(f"  REACHABLE_CACHE_MATCHED_KEY={payload.get('cache_matched_key') or 'none'}")
     print(f"  REACHABLE_INSTALL_MODE={payload.get('install_mode') or 'unknown'}")
-    print(f"  REACHABLE_VERSION_TARGET={payload.get('target_version') or 'latest'}")
-    print(f"  REACHABLE_VERSION_INSTALLED={payload.get('installed_version') or 'none'}")
+    print(f"  REACHABLE_INSTALL_TARGET={payload.get('target_version') or 'latest'}")
+    print(f"  REACHABLE_INSTALLED={payload.get('installed_version') or 'none'}")
     print(f"  REACHABLE_HOME_SIZE_KB={payload.get('reachable_home_size_kb')}")
     print(f"  REACHABLE_REPO_DB_COUNT={payload.get('repo_db_count')}")
     print(f"  REACHABLE_SCAN_SESSION_COUNT={payload.get('scan_session_count')}")

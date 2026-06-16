@@ -55,7 +55,6 @@ The marketplace demo defaults to the strongest remediation path:
 | `fail_on` | `exploitable` | Customer-facing scan/proof threshold. |
 | `proof_fail_on` | `exploitable` | Explicit post-remediation proof threshold. |
 | `fresh_scan` | `true` | Prove a clean public install and scan path. |
-| `reachable_version` | empty/latest | Follow the latest Reachable release by default. Set an exact value only for reproducible replay. |
 
 ## AI Modes
 
