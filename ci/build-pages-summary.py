@@ -97,7 +97,10 @@ def main() -> int:
     summary["compliance"] = compliance
     summary["artifacts"] = artifacts
     summary["run_evidence"] = run_evidence
-    summary["expected_demo"] = _expected_demo_summary(artifact_dir=ledger_path.parent)
+    try:
+        summary["expected_demo"] = _expected_demo_summary(artifact_dir=ledger_path.parent)
+    except FileNotFoundError as exc:
+        summary["expected_demo"] = _expected_demo_unavailable(reason=str(exc))
     _apply_db_verdict(summary)
     summary["ai_economics"] = _demo_ai_economics(summary["expected_demo"])
     summary["artifacts"].extend(
@@ -167,6 +170,43 @@ def _load_json(path: Path) -> dict[str, Any]:
 
 def _load_json_required(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _expected_demo_unavailable(*, reason: str) -> dict[str, Any]:
+    expected_path = Path(
+        os.environ.get("REACHABLE_EXPECTED_CONTRACT")
+        or Path(__file__).resolve().parents[1] / "expected" / "baseline.json"
+    )
+    expected_total = 0
+    verified_with = ""
+    name = "reach-testbed-go golden baseline"
+    if expected_path.exists():
+        expected = _load_json(expected_path)
+        expected_total = len(((expected.get("sarif") or {}).get("results") or []))
+        verified_with = str(expected.get("verified_with_reachable") or "")
+        name = str(expected.get("name") or name)
+    return {
+        "available": False,
+        "name": name,
+        "verified_with_reachable": verified_with,
+        "expected_total": expected_total,
+        "baseline_found": 0,
+        "baseline_missing": expected_total,
+        "fixed": 0,
+        "still_present": 0,
+        "after_available": False,
+        "after_total": None,
+        "clean": False,
+        "headline": f"Structured scan database proof is unavailable for this run: {reason}",
+        "rows": [],
+        "contract_path": "EXPECTED.md" if expected_path.exists() else "",
+        "baseline": {},
+        "after": {},
+        "baseline_ai": {},
+        "after_ai": {},
+        "evidence_source": "unavailable",
+        "unavailable_reason": reason,
+    }
 
 
 def _expected_demo_summary(*, artifact_dir: Path) -> dict[str, Any]:
