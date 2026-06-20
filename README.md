@@ -142,6 +142,7 @@ Use these links when you need options beyond the default Marketplace snippet:
 
 | Need | Link |
 |------|------|
+| Sthenos Security landing page | [sthenosec.com](https://sthenosec.com/) |
 | Public guide and provider map | [CI auto-remediation on sthenosec.com](https://sthenosec.com/resources/auto-remediation) |
 | Input defaults | [Defaults](#defaults) |
 | AI provider and coding-agent lanes | [AI Modes](#ai-modes) |
