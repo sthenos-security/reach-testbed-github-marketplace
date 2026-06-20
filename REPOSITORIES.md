@@ -1,23 +1,25 @@
 # REACHABLE GitHub And GitLab Repositories
 
 This file explains the public CI/CD repository layout. The GitHub and GitLab
-sets are intentionally symmetrical: each ecosystem has a reusable toolkit, a
-distribution/discovery surface, and a Go demo repo that covers both full
-remediation and scan-only runs with remediation disabled.
+sets are intentionally symmetrical: each ecosystem has a user-facing
+distribution surface, a reusable toolkit, and a Go demo repo that covers both
+full remediation and scan-only runs with remediation disabled.
 
 ## GitHub Repositories
 
-| Repository | Primary role | Use this when |
+| Surface | Primary role | Use this when |
 |---|---|---|
-| [`reach-testbed-github-marketplace`](https://github.com/sthenos-security/reach-testbed-github-marketplace) | GitHub Marketplace repo plus the configurable root action. | You need the public GitHub Marketplace listing or the root action that mirrors the GitLab Catalog surface. |
+| [`Reachable Security Scan and Remediation`](https://github.com/marketplace/actions/reachable-security-scan-and-remediation) | GitHub Marketplace action for customer installation. | You want the Marketplace entrypoint for code exploitability analysis and risk posture reduction in GitHub Actions. |
+| [`reach-testbed-github-marketplace`](https://github.com/sthenos-security/reach-testbed-github-marketplace) | GitHub Marketplace distribution repo plus the configurable root action. | You need the README, action metadata, or implementation wrapper behind the Marketplace listing. |
 | [`reach-ci-github`](https://github.com/sthenos-security/reach-ci-github) | Reusable GitHub Actions toolkit for production auto-remediation. | You want the recommended customer workflow with branch creation, proof scan, optional PR, artifacts, and Pages proof. |
 | [`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go) | Public GitHub demo repo. | You want runnable Codex and Claude demos, public source cloning, MCP GitHub cloning, git clone fallback, post-remediation proof, or a scan-only sample with remediation disabled. |
 
 ## GitLab Repositories
 
-| Repository | Primary role | GitHub equivalent |
+| Surface | Primary role | GitHub equivalent |
 |---|---|---|
-| [`reach-testbed-gitlab-catalog`](https://gitlab.com/sthenos-security-public/reach-testbed-gitlab-catalog) | GitLab CI/CD Catalog repo plus the Catalog component. | `reach-testbed-github-marketplace` |
+| [`reachable` Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reach-testbed-gitlab-catalog) | GitLab Catalog component for customer installation. | GitHub Marketplace action |
+| [`reach-testbed-gitlab-catalog`](https://gitlab.com/sthenos-security-public/reach-testbed-gitlab-catalog) | GitLab CI/CD Catalog repo plus the Catalog component source. | `reach-testbed-github-marketplace` |
 | [`reach-ci-gitlab`](https://gitlab.com/sthenos-security-public/reach-ci-gitlab) | Reusable GitLab remediation toolkit. | `reach-ci-github` |
 | [`reach-testbed-gitlab-go`](https://gitlab.com/sthenos-security-public/reach-testbed-gitlab-go) | Public GitLab demo repo. | `reach-testbed-github-go` |
 
@@ -25,7 +27,11 @@ remediation and scan-only runs with remediation disabled.
 
 ```text
 Distribution surface
-  GitHub Marketplace repo / GitLab Catalog repo
+  GitHub Marketplace action / GitLab Catalog component
+        |
+        v
+Distribution repo
+  reach-testbed-github-marketplace / reach-testbed-gitlab-catalog
         |
         v
 Reusable toolkit
@@ -41,9 +47,10 @@ REACHABLE
   agent, rescan, publish sanitized proof
 ```
 
-The Marketplace/Catalog repositories are the discovery and onboarding
-surfaces. The toolkit repositories contain the reusable CI implementation. The
-Go demo repositories are the public runnable examples and validation targets.
+The Marketplace action and Catalog component are the discovery and onboarding
+surfaces. The Marketplace/Catalog repositories hold their source and README
+docs. The toolkit repositories contain the reusable CI implementation. The Go
+demo repositories are the public runnable examples and validation targets.
 
 ## Token Model
 

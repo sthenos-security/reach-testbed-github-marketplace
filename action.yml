@@ -1,6 +1,6 @@
 name: Reachable Security Scan and Remediation
 author: Sthenos Security
-description: Marketplace entrypoint for REACHABLE scan and reviewable remediation. Defaults to Codex and supports Claude through ai-mode.
+description: Code exploitability analysis and risk posture reduction for GitHub Actions.
 
 branding:
   icon: shield

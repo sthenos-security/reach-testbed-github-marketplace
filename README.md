@@ -5,7 +5,8 @@ Repository: `reach-testbed-github-marketplace`
 REACHABLE GitHub Marketplace distribution repo.
 
 This repo is the public Marketplace distribution surface for REACHABLE on
-GitHub. It uses the reusable
+GitHub. Use it for code exploitability analysis and risk posture reduction in
+GitHub Actions. It uses the reusable
 [`reach-ci-github`](https://github.com/sthenos-security/reach-ci-github)
 toolkit and defaults to the Codex remediation lane while still allowing the
 user to switch AI modes.
@@ -25,11 +26,22 @@ GitLab catalog repo importing `reach-ci-gitlab`.
 
 | Repo | Role |
 |------|------|
-| `reach-testbed-github-marketplace` | GitHub Marketplace repo plus the configurable root action |
+| [`Reachable Security Scan and Remediation`](https://github.com/marketplace/actions/reachable-security-scan-and-remediation) | GitHub Marketplace action for customer installation |
+| [`reachable` GitLab Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reach-testbed-gitlab-catalog) | GitLab Catalog component for customer installation |
+| `reach-testbed-github-marketplace` | GitHub Marketplace distribution repo plus the configurable root action |
 | `reach-ci-github` | Reusable GitHub remediation toolkit |
 | `reach-testbed-github-go` | Public GitHub demo repo with explicit provider workflows and scan-only mode |
 
 The full GitHub and GitLab repo map is in [REPOSITORIES.md](REPOSITORIES.md).
+
+## Marketplace And Catalog
+
+Use the public entrypoint for your CI/CD platform:
+
+| Platform | Entrypoint | Purpose |
+|----------|------------|---------|
+| GitHub Actions | [Reachable Security Scan and Remediation](https://github.com/marketplace/actions/reachable-security-scan-and-remediation) | Marketplace action for code exploitability analysis and risk posture reduction in GitHub Actions |
+| GitLab CI/CD | [`reachable` Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reach-testbed-gitlab-catalog) | Catalog component for code exploitability analysis and risk posture reduction in GitLab CI/CD |
 
 ## GitHub Marketplace Action
 
@@ -98,6 +110,48 @@ GitHub Marketplace indexes actions from a public repository's root
 `action.yml`. This repo does not need separate public demo workflows because
 the runnable Codex and Claude demos live in
 [`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go).
+
+## CI/CD Demo Examples
+
+Use the demo repositories when you want to inspect or run the public sample flow
+before wiring REACHABLE into another project:
+
+| Platform | Demo |
+|----------|------|
+| GitHub Actions | [`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go) |
+| GitLab CI/CD | [`reach-testbed-gitlab-go`](https://gitlab.com/sthenos-security-public/reach-testbed-gitlab-go) |
+
+Each demo shows the toolkit-backed full remediation path and a scan-only mode
+with remediation disabled.
+
+## CI/CD Toolkits
+
+Use the toolkit repositories when Marketplace or Catalog defaults are not enough:
+
+| Platform | Toolkit | Use it to change |
+|----------|---------|------------------|
+| GitHub Actions | [`reach-ci-github`](https://github.com/sthenos-security/reach-ci-github) | Branch policy, PR creation, artifacts, Pages proof output, AI lane, or proof thresholds |
+| GitLab CI/CD | [`reach-ci-gitlab`](https://gitlab.com/sthenos-security-public/reach-ci-gitlab) | Branch push, MR creation, artifacts, Pages proof output, AI lane, or proof thresholds |
+
+Contact [Sthenos Security](mailto:info@sthenosec.com?subject=Custom%20CI%2FCD%20integration)
+for custom CI/CD integration.
+
+## Configure The Pipeline
+
+Use these links when you need options beyond the default Marketplace snippet:
+
+| Need | Link |
+|------|------|
+| Public guide and provider map | [CI auto-remediation on sthenosec.com](https://sthenosec.com/resources/auto-remediation) |
+| Input defaults | [Defaults](#defaults) |
+| AI provider and coding-agent lanes | [AI Modes](#ai-modes) |
+| Required GitHub Actions secrets | [Token Setup](#token-setup) |
+| Reusable workflow without the Marketplace shim | [`reach-ci-github`](https://github.com/sthenos-security/reach-ci-github) |
+| Public GitHub demo repo | [`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go) |
+
+The Marketplace action is the easiest entrypoint. The toolkit repo is the
+implementation reference when you need to change branch policy, PR creation,
+artifact publication, Pages output, AI lane, or proof thresholds.
 
 ## Token Setup
 
