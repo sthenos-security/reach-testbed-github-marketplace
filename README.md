@@ -13,6 +13,11 @@ uses the reusable
 toolkit and defaults to the Codex remediation lane while still allowing the
 user to switch AI modes.
 
+The verified Copilot remediation campaign is being packaged after the rebuilt
+beta is promoted. Until that beta is the Marketplace source, the runnable
+Copilot proof remains in the public Go demo repo and the Marketplace action
+should be advertised as the Codex/Claude remediation install surface.
+
 `ΣREACHABLE` is the visual brand mark. The searchable Marketplace action name
 is `REACHABLE Risk Exposure Reduction`, and configuration examples
 use `REACHABLE` / `reachable` names so users can find and install the action
@@ -54,7 +59,8 @@ Use the public entrypoint for your CI/CD platform:
 
 GitHub Marketplace publishes the single root action from this repo. The action
 defaults to `openai-codex` and exposes the provider switch through `ai-mode`,
-so one Marketplace listing can serve both Codex and Claude lanes.
+so one Marketplace listing can serve Codex and Claude lanes now, then the
+hosted Copilot campaign lane after the rebuilt beta is promoted.
 
 Use it like this:
 
@@ -115,7 +121,7 @@ jobs:
 
 GitHub Marketplace indexes actions from a public repository's root
 `action.yml`. This repo does not need separate public demo workflows because
-the runnable Codex and Claude demos live in
+the runnable Codex, Claude, and Copilot campaign demos live in
 [`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go).
 
 ## CI/CD Demo Examples
@@ -223,12 +229,36 @@ The Marketplace action defaults to the remediation path:
 | `openai-gpt` | `OPENAI_API_KEY` | OpenAI | Not allowed when remediation is enabled |
 | `openai-codex` | `OPENAI_API_KEY` | OpenAI | Codex |
 | `anthropic-claude` | `ANTHROPIC_API_KEY` | Anthropic / Claude | Claude Code |
+| `copilot-github` | `REACHABLE_COPILOT_USER_TOKEN` | None for local scan AI | Hosted GitHub Copilot campaign; post-beta Marketplace packaging |
 
 The Marketplace action delegates to `reach-ci-github@v1`, which sanitizes the
 inputs before invoking `reachctl`. Scan jobs derive exactly one provider
 argument from `ai-mode`: `--ai-provider openai` for `openai-gpt` and
 `openai-codex`, or `--ai-provider claude` for `anthropic-claude`. When
-`remediate=true`, `openai-gpt` fails fast with a clear scan-only error.
+`remediate=true`, `openai-gpt` fails fast with a clear scan-only error. The
+`copilot-github` lane is different from the synchronous Codex and Claude lanes:
+it dispatches bounded hosted Copilot tasks from REACHABLE evidence, can create
+multiple PRs, and relies on separate PR verification plus aggregate campaign
+parity proof. It should not be advertised from the Marketplace package until the
+rebuilt beta carrying that flow is promoted.
+
+## Copilot Campaign Lane
+
+The Copilot integration is a hosted GitHub Copilot campaign, not a local coding
+agent loop. REACHABLE shards the remediation queue by priority and remediation
+affinity, dispatches one bounded Copilot task per shard, and expects one
+reviewable PR per task.
+
+The campaign acceptance gate is the same product bar as Codex and Claude:
+
+- every Copilot PR has a REACHABLE verification pass
+- the aggregate campaign parity check reports no unresolved release-blocking
+  signals
+- no branch is auto-merged by the Marketplace action
+
+Auto-merge is a roadmap option for customers who request it and accept the
+extra repository policy work. The default Marketplace behavior remains
+reviewable PRs plus proof artifacts.
 
 ## Expected Result
 
