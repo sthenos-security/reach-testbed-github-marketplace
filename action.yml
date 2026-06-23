@@ -1,6 +1,6 @@
 name: REACHABLE Risk Exposure Reduction
 author: Sthenos Security
-description: Proof-backed risk exposure reduction for GitHub Actions by Sthenos Security.
+description: Proof-backed risk exposure reduction for GitHub Actions by Sthenos Security, with Codex, Claude, and hosted Copilot remediation lanes.
 
 branding:
   icon: shield
@@ -20,7 +20,7 @@ inputs:
     required: false
     default: "false"
   ai-mode:
-    description: Public AI lane selector. Use openai-codex, openai-gpt, or anthropic-claude.
+    description: Public AI lane selector. Use openai-codex, openai-gpt, anthropic-claude, or copilot-github.
     required: false
     default: openai-codex
   agent-model:
@@ -115,6 +115,10 @@ inputs:
     description: Read-only GitHub token for richer source and package context.
     required: false
     default: ""
+  reachable-copilot-user-token:
+    description: GitHub user or app user-to-server token for hosted Copilot task dispatch when ai-mode=copilot-github. When omitted, REACHABLE_COPILOT_USER_TOKEN from env is used.
+    required: false
+    default: ""
 
 outputs:
   remediation-branch:
@@ -173,3 +177,4 @@ runs:
         reachable_api_key: ${{ inputs.reachable-api-key || env.REACHABLE_API_KEY }}
         reachable_github_token: ${{ inputs.reachable-github-token || env.REACHABLE_GITHUB_TOKEN }}
         mcp_github_token: ${{ inputs.mcp-github-token || env.MCP_GITHUB_TOKEN }}
+        reachable_copilot_user_token: ${{ inputs.reachable-copilot-user-token || env.REACHABLE_COPILOT_USER_TOKEN }}
