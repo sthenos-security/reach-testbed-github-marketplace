@@ -33,12 +33,29 @@ def _create_case(root: Path, *, blocking: bool, defended: bool = False) -> Path:
             id INTEGER PRIMARY KEY,
             scan_id INTEGER,
             signal_type TEXT,
+            finding_id TEXT,
+            display_id TEXT,
             file_path TEXT,
             line_number INTEGER,
+            title TEXT,
+            description TEXT,
             app_reachability TEXT,
             risk_level TEXT,
             severity TEXT,
-            prod_status TEXT
+            cwe_id TEXT,
+            cve_id TEXT,
+            secret_type TEXT,
+            pii_type TEXT,
+            package_name TEXT,
+            package_version TEXT,
+            scanner TEXT,
+            rule_id TEXT,
+            prod_status TEXT,
+            remediation_kind TEXT,
+            remediation_target TEXT,
+            remediation_action TEXT,
+            synthesis_hints_json TEXT,
+            exploit_verdict_json TEXT
         );
         CREATE TABLE enzo_attacker_audit (
             scan_id INTEGER,
@@ -68,11 +85,41 @@ def _create_case(root: Path, *, blocking: bool, defended: bool = False) -> Path:
         conn.execute(
             """
             INSERT INTO signals (
-                scan_id, signal_type, file_path, line_number,
-                app_reachability, risk_level, severity, prod_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                scan_id, signal_type, finding_id, display_id, file_path, line_number,
+                title, description, app_reachability, risk_level, severity,
+                cwe_id, cve_id, secret_type, pii_type, package_name,
+                package_version, scanner, rule_id, prod_status,
+                remediation_kind, remediation_target, remediation_action,
+                synthesis_hints_json, exploit_verdict_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (1, "cwe", "internal/handlers/cwe.go", 12, "REACHABLE", "CRITICAL", "CRITICAL", "PRODUCTION"),
+            (
+                1,
+                "cwe",
+                "smoke-cwe-78",
+                "CWE-78",
+                "internal/handlers/cwe.go",
+                12,
+                "OS command injection",
+                "Synthetic smoke blocker",
+                "REACHABLE",
+                "CRITICAL",
+                "CRITICAL",
+                "CWE-78",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "smoke",
+                "smoke-cwe-78",
+                "PRODUCTION",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ),
         )
     if defended:
         conn.execute(
