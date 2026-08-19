@@ -92,7 +92,7 @@ inputs:
     required: false
     default: "false"
   reachable-dist-repo:
-    description: Distribution repository containing install.sh.
+    description: Fallback distribution repository used only when the first-party installer at https://sthenosec.com/download/install.sh is unavailable.
     required: false
     default: sthenos-security/reach-dist
   openai-api-key:
