@@ -1,0 +1,94 @@
+name: "Run Marketplace Demo"
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Base branch or existing remediation branch
+        type: string
+        default: "main"
+      ai_mode:
+        description: AI remediation lane
+        type: choice
+        options:
+          - openai-codex
+          - anthropic-claude
+          - copilot-github
+          - openai-gpt
+        default: openai-codex
+      remediate:
+        description: Allow Reachable to create code changes
+        type: boolean
+        default: true
+      rescan_only:
+        description: Only verify target_branch; do not edit code
+        type: boolean
+        default: false
+      scan_mode:
+        description: Use real for full Reachable execution, or nop for CI wiring smoke tests
+        type: choice
+        options:
+          - real
+          - nop
+        default: real
+      create_pr:
+        description: Open a remediation pull request after proof passes
+        type: boolean
+        default: true
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/reachable-remediate.yml"
+      - "action.yml"
+
+permissions:
+  actions: write
+  contents: write
+  id-token: write
+  issues: write
+  pages: write
+  pull-requests: write
+  security-events: write
+
+concurrency:
+  group: marketplace-remediation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  marketplace-remediation:
+    name: Marketplace action remediation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+
+      - name: Run local Marketplace action
+        uses: ./
+        with:
+          target-branch: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
+          ai-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.ai_mode || 'openai-codex' }}
+          remediate: ${{ github.event_name == 'workflow_dispatch' && inputs.remediate || 'false' }}
+          rescan-only: ${{ github.event_name == 'workflow_dispatch' && inputs.rescan_only || 'false' }}
+          scan-mode: ${{ github.event_name == 'workflow_dispatch' && inputs.scan_mode || 'nop' }}
+          create-pr: ${{ github.event_name == 'workflow_dispatch' && inputs.create_pr || 'false' }}
+          publish-report: "true"
+          upload-artifacts: "true"
+          publish-pages: "false"
+          require-ai: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+          fresh-scan: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+          fail-on: exploitable
+          proof-fail-on: exploitable
+          prompt-profile: balanced
+          signal-types: all
+          max-batches: "1"
+          rescan-strategy: each_batch
+          openai-api-key: ${{ github.event_name == 'workflow_dispatch' && secrets.OPENAI_API_KEY || '' }}
+          anthropic-api-key: ${{ github.event_name == 'workflow_dispatch' && secrets.ANTHROPIC_API_KEY || '' }}
+          reachable-api-key: ${{ github.event_name == 'workflow_dispatch' && secrets.REACHABLE_API_KEY || '' }}
+          reachable-github-token: ${{ github.event_name == 'workflow_dispatch' && secrets.REACHABLE_GITHUB_TOKEN || '' }}
+          mcp-github-token: ${{ github.event_name == 'workflow_dispatch' && secrets.MCP_GITHUB_TOKEN || '' }}
+          reachable-copilot-user-token: ${{ github.event_name == 'workflow_dispatch' && secrets.REACHABLE_COPILOT_USER_TOKEN || '' }}

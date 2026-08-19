@@ -120,11 +120,16 @@ jobs:
 ```
 
 GitHub Marketplace indexes actions from a public repository's root
-`action.yml`. This repo does not need separate public demo workflows because
-the runnable Codex and Claude demos live in
-[`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go).
-That Go demo repo also carries the public Copilot campaign verifier/parity
-workflow used to prove the multi-PR campaign path.
+`action.yml`. This repo also carries its own remediation workflow at
+`.github/workflows/reachable-remediate.yml`. Manual dispatch runs the local
+Marketplace action against this repository and can execute the Codex, Claude, or
+hosted Copilot remediation lanes. Push runs stay on `scan-mode=nop`, so they
+validate the action wiring without scanner or agent execution.
+
+The runnable Go demos still live in
+[`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go),
+including the public Copilot campaign verifier/parity workflow used to prove
+the multi-PR campaign path.
 
 ## CI/CD Demo Examples
 
@@ -133,6 +138,7 @@ before wiring REACHABLE into another project:
 
 | Platform | Demo |
 |----------|------|
+| GitHub Marketplace | [`reach-testbed-github-marketplace`](https://github.com/sthenos-security/reach-testbed-github-marketplace/actions/workflows/reachable-remediate.yml) |
 | GitHub Actions | [`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go) |
 | GitLab CI/CD | [`reach-testbed-gitlab-go`](https://gitlab.com/sthenos-security-public/reach-testbed-gitlab-go) |
 
