@@ -1823,7 +1823,7 @@ def _remediation_loop_table(remediation: dict[str, Any], expected_demo: dict[str
     rows = [
         ("Configured maximum batches", str(_safe_int(remediation.get("max_batches")) or "not set")),
         ("Batches used", str(_safe_int(remediation.get("used_batches") or remediation.get("attempt_count")))),
-        ("Rescan strategy", str(remediation.get("rescan_strategy") or "final")),
+        ("Rescan strategy", str(remediation.get("rescan_strategy") or "final_only")),
         ("Stop condition", _remediation_stop_reason(remediation, expected_demo)),
         ("Final DB release blockers", str(_safe_int(expected_demo.get("after_total")))),
     ]

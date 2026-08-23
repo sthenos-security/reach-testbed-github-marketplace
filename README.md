@@ -223,6 +223,18 @@ The GitHub equivalent of the catalog repo's publish path is therefore simpler:
 the built-in `GITHUB_TOKEN` is the write path for remediation branches, PRs,
 artifacts, and Pages, while `MCP_GITHUB_TOKEN` stays read-only source context.
 
+## CI Agent Trust Model
+
+This Marketplace repo is the public GitHub reference and demo surface. The
+synchronous Codex/Claude lanes run the selected coding agent non-interactively
+with repository write authority on a generated remediation branch; the
+`copilot-github` lane dispatches hosted GitHub Copilot tasks that produce
+reviewable PRs. That is expected for the reference path. The trust boundary is
+the GitHub workflow and repository policy: protected branches, trusted runners,
+masked provider keys, `GITHUB_TOKEN` permissions, fork-workflow approval, and
+human review before merge. Do not run code-changing remediation from untrusted
+forks or workflows that can expose CI secrets.
+
 ## Defaults
 
 The Marketplace action defaults to the remediation path:
@@ -237,6 +249,11 @@ The Marketplace action defaults to the remediation path:
 | `create-pr` | `true` | Open a remediation PR after the branch is pushed. |
 | `publish-report` | `true` | Build the proof page and structured exports. |
 | `publish-pages` | `false` | Leave Pages off unless the caller explicitly wants deployment. |
+
+The Marketplace demo workflow uses a 240-minute outer GitHub job timeout. The
+inner `agent-timeout-sec` input still controls each coding-agent batch; the
+outer timeout covers install, scans, proof, artifact publishing, and PR
+handling.
 
 ## AI Modes
 

@@ -59,7 +59,7 @@ jobs:
   marketplace-remediation:
     name: Marketplace action remediation
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 240
     steps:
       - name: Checkout target branch
         uses: actions/checkout@v5
