@@ -32,11 +32,11 @@ inputs:
     required: false
     default: "1800"
   prompt-profile:
-    description: Reachable remediation prompt profile.
+    description: Legacy ledger metadata only; remediae profile is owned by installed reachctl (CI does not pass --profile).
     required: false
     default: balanced
   signal-types:
-    description: Comma-separated signal families, or all.
+    description: Comma-separated signal families, or all (default scope; does not pass --all).
     required: false
     default: all
   max-batches:
