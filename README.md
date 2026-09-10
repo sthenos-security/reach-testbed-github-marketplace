@@ -1,14 +1,21 @@
-# ΣREACHABLE For GitHub Marketplace
+# ΣREACHABLE — Risk Exposure Reduction for GitHub Actions
 
-Repository: `reach-testbed-github-marketplace`
+**AI-powered application security scanning with reachability-verified findings
+and reviewable auto-remediation, by [Sthenos Security](https://sthenosec.com).**
 
-ΣREACHABLE GitHub Marketplace distribution repo.
+REACHABLE runs SAST, dependency/CVE, secret, DLP, CI/CD workflow, and AI/LLM
+security scanning inside GitHub Actions — then goes further than a scanner:
+it proves which vulnerabilities are actually **reachable and exploitable** in
+your code paths, uploads **SARIF to GitHub code scanning**, publishes a
+proof-backed report page, and can open reviewable **auto-remediation**
+branches and pull requests using OpenAI Codex, Anthropic Claude, or hosted
+GitHub Copilot.
 
-Made by Sthenos Security.
+Install from the GitHub Marketplace:
+[**REACHABLE Risk Exposure Reduction**](https://github.com/marketplace/actions/reachable-risk-exposure-reduction).
 
-This repo is the public Marketplace distribution surface for REACHABLE on
-GitHub. Use it for proof-backed risk exposure reduction in GitHub Actions. It
-uses the reusable
+This repository is the public Marketplace distribution surface for REACHABLE
+on GitHub. It uses the reusable
 [`reach-ci-github`](https://github.com/sthenos-security/reach-ci-github)
 toolkit and defaults to the Codex remediation lane while still allowing the
 user to switch AI modes.
