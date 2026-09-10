@@ -1,6 +1,6 @@
 name: REACHABLE Risk Exposure Reduction
 author: Sthenos Security
-description: Proof-backed risk exposure reduction for GitHub Actions by Sthenos Security, with Codex, Claude, and hosted Copilot remediation lanes.
+description: Proof-backed risk exposure reduction for GitHub Actions, with Codex, Claude, and hosted Copilot remediation lanes.
 
 branding:
   icon: shield
