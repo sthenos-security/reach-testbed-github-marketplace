@@ -66,6 +66,9 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.target_branch || github.ref_name }}
 
+      - name: Validate Marketplace metadata (publish rules GitHub enforces at the checkbox)
+        run: python3 ci/validate-marketplace-metadata.py
+
       - name: Run local Marketplace action
         uses: ./
         with:
