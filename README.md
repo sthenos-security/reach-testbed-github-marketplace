@@ -1,5 +1,11 @@
 # ΣREACHABLE — Risk Exposure Reduction for GitHub Actions
 
+> **Early access (beta).** REACHABLE is in active beta: scanner releases ship
+> continuously, and the CI integration surfaces are stable — "Beta" in the
+> GitLab maturity sense (near-complete, supported, breaking changes announced
+> in advance). Early-adopter feedback shapes the product:
+> <support@sthenosec.com>.
+
 **AI-powered application security scanning with reachability-verified findings
 and reviewable auto-remediation, by [Sthenos Security](https://sthenosec.com).**
 
