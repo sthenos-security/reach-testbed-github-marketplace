@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -92,7 +93,11 @@ func TestFetchTool_AllowlistedURLWritesTool(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
-	target := strings.TrimSpace(rec.Body.String())
+	targetName := strings.TrimSpace(rec.Body.String())
+	if strings.Contains(targetName, "/") {
+		t.Fatalf("expected opaque filename, got %q", targetName)
+	}
+	target := filepath.Join(os.TempDir(), targetName)
 	t.Cleanup(func() {
 		_ = os.Remove(target)
 	})

@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -29,6 +30,12 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 	}
 	defer out.Close()
 	target := out.Name()
+	if err := out.Chmod(0o600); err != nil {
+		log.Printf("handler=FetchTool op=chmod_target request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)
+		_ = os.Remove(target)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
 
 	if _, err := io.Copy(out, io.LimitReader(content, 2<<20)); err != nil {
 		log.Printf("handler=FetchTool op=write_target request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)
@@ -37,7 +44,7 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = w.Write([]byte(target + "\n"))
+	_, _ = w.Write([]byte(filepath.Base(target) + "\n"))
 }
 
 func toolPayloadForSource(source string) (io.Reader, error) {
