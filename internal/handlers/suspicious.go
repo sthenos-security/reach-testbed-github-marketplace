@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
@@ -22,14 +21,14 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
-	out, err := os.Create(target)
+	out, err := os.CreateTemp(os.TempDir(), "reach-testbed-tool-*.bin")
 	if err != nil {
 		log.Printf("handler=FetchTool op=create_target request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	defer out.Close()
+	target := out.Name()
 
 	if _, err := io.Copy(out, io.LimitReader(content, 2<<20)); err != nil {
 		log.Printf("handler=FetchTool op=write_target request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)

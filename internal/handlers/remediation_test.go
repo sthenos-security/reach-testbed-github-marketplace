@@ -79,6 +79,9 @@ func TestFetchTool_AllowlistedURLWritesTool(t *testing.T) {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
 	target := strings.TrimSpace(rec.Body.String())
+	t.Cleanup(func() {
+		_ = os.Remove(target)
+	})
 	content, err := os.ReadFile(target)
 	if err != nil {
 		t.Fatalf("read target file: %v", err)
