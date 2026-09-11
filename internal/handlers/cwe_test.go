@@ -32,7 +32,13 @@ func TestDiagnosticPingAcceptsValidHost(t *testing.T) {
 		t.Fatalf("failed to write ping stub: %v", err)
 	}
 
-	t.Setenv("PATH", tempDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	originalResolvePingPath := resolvePingPath
+	resolvePingPath = func() (string, error) {
+		return pingPath, nil
+	}
+	t.Cleanup(func() {
+		resolvePingPath = originalResolvePingPath
+	})
 
 	query := url.Values{}
 	query.Set("host", "example.com")
