@@ -138,12 +138,26 @@ def _db_summary(db_path: Path) -> dict[str, Any]:
             if row:
                 summary["latest_scan"] = {
                     "id": _safe_int(row["id"]),
-                    "branch": _safe_text(row["branch"], limit=64),
-                    "commit_short": _safe_text(row["commit_short"], limit=32, redact_long_digits=False),
-                    "commit_hash": _safe_text(row["commit_hash"], limit=64, redact_long_digits=False),
-                    "timestamp": _safe_text(row["timestamp"], limit=48),
-                    "version": _safe_text(row["version"], limit=32),
-                    "status": _safe_text(row["status"], limit=24),
+                    "branch": _safe_text(row["branch"], limit=64, allow_pattern=re.compile(r"[A-Za-z0-9._/\-]+")),
+                    "commit_short": _safe_text(
+                        row["commit_short"],
+                        limit=32,
+                        redact_long_digits=False,
+                        allow_pattern=re.compile(r"[A-Fa-f0-9]{4,32}"),
+                    ),
+                    "commit_hash": _safe_text(
+                        row["commit_hash"],
+                        limit=64,
+                        redact_long_digits=False,
+                        allow_pattern=re.compile(r"[A-Fa-f0-9]{7,64}"),
+                    ),
+                    "timestamp": _safe_text(
+                        row["timestamp"],
+                        limit=48,
+                        allow_pattern=re.compile(r"[0-9:\-+T.Z ]+"),
+                    ),
+                    "version": _safe_text(row["version"], limit=32, allow_pattern=re.compile(r"[A-Za-z0-9._+\-]+")),
+                    "status": _safe_text(row["status"], limit=24, allow_pattern=re.compile(r"[A-Za-z0-9_ -]+")),
                     "total_findings": _safe_int(row["total_findings"]),
                     "reachable_findings": _safe_int(row["reachable_findings"]),
                 }
@@ -172,13 +186,21 @@ _SSN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 _LONG_DIGITS = re.compile(r"\b\d{13,19}\b")
 
 
-def _safe_text(value: Any, *, limit: int, redact_long_digits: bool = True) -> str:
+def _safe_text(
+    value: Any,
+    *,
+    limit: int,
+    redact_long_digits: bool = True,
+    allow_pattern: re.Pattern[str] | None = None,
+) -> str:
     raw = "" if value is None else str(value)
     text = raw.replace("\r", " ").replace("\n", " ").strip()
     if _EMAIL.search(text) or _SSN.search(text) or (redact_long_digits and _LONG_DIGITS.search(text)):
         return "[redacted]"
     if len(text) > limit:
-        return text[:limit]
+        text = text[:limit]
+    if allow_pattern and text and not allow_pattern.fullmatch(text):
+        return "[redacted]"
     return text
 
 

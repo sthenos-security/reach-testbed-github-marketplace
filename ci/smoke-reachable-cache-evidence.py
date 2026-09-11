@@ -24,8 +24,11 @@ def main() -> int:
     mod = _load_module(MODULE_PATH, "reachable_cache_evidence")
     assert mod._safe_text("x" * 80, limit=16) == "x" * 16
     assert mod._safe_text("alice@example.com", limit=64) == "[redacted]"
+    assert mod._safe_text("123-45-6789", limit=64) == "[redacted]"
     assert mod._safe_text("4111111111111111", limit=64) == "[redacted]"
     assert mod._safe_text("4111111111111111", limit=64, redact_long_digits=False) == "4111111111111111"
+    assert mod._safe_int("7") == 7
+    assert mod._safe_int("not-a-number") == 0
     print("Reachable cache evidence smoke passed")
     return 0
 
