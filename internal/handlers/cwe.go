@@ -46,7 +46,7 @@ func diagnosticPing(w http.ResponseWriter, r *http.Request, resolver func() (str
 func trustedPingPath() (string, error) {
 	for _, path := range []string{"/bin/ping", "/usr/bin/ping"} {
 		info, err := os.Stat(path)
-		if err == nil && !info.IsDir() {
+		if err == nil && !info.IsDir() && info.Mode()&0o111 != 0 {
 			return path, nil
 		}
 	}
