@@ -12,8 +12,8 @@
 > in advance). Early-adopter feedback shapes the product:
 > <support@sthenosec.com>.
 
-**AI SAST/SCA with reachability-verified findings and proposed fix PRs, by
-[Sthenos Security](https://sthenosec.com).**
+**AI SAST/SCA with reachability- and exploitability-verified findings and
+proposed fix PRs, by [Sthenos Security](https://sthenosec.com).**
 
 REACHABLE is **AI SAST/SCA** for GitHub Actions: first-party SAST plus
 dependency/CVE (SCA), secret, DLP, CI/CD workflow, and AI/LLM security
