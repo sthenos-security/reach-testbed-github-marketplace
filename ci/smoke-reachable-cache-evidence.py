@@ -30,6 +30,7 @@ def main() -> int:
     assert mod._safe_int("7") == 7
     assert mod._safe_int("not-a-number") == 0
     assert mod._safe_int(float("inf")) == 0
+    assert mod._safe_int(7.9) == 0
     assert mod._safe_int(True) == 0
     print("Reachable cache evidence smoke passed")
     return 0
