@@ -17,7 +17,7 @@ func DiagnosticPing(w http.ResponseWriter, r *http.Request) {
 
 	out, err := exec.CommandContext(r.Context(), "ping", "-c", "1", host).CombinedOutput()
 	if err != nil {
-		log.Printf("diagnostic ping failed for host %q: %v", host, err)
+		log.Printf("diagnostic ping failed: %v", err)
 		http.Error(w, "diagnostic failed", http.StatusBadGateway)
 		return
 	}
