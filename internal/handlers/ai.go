@@ -77,7 +77,7 @@ func strconvQuote(value string) string {
 
 func boundedUserText(value string) (string, bool) {
 	trimmed := strings.TrimSpace(value)
-	if trimmed == "" || len(trimmed) > 500 {
+	if trimmed == "" || len([]rune(trimmed)) > 500 {
 		return "", false
 	}
 	return trimmed, true
