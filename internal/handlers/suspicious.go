@@ -32,6 +32,7 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := io.Copy(out, io.LimitReader(content, 2<<20)); err != nil {
 		log.Printf("handler=FetchTool op=write_target request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)
+		_ = os.Remove(target)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -50,7 +51,10 @@ func toolPayloadForSource(source string) (io.Reader, error) {
 	if parsed.Scheme != "https" {
 		return nil, errors.New("source url must use https")
 	}
-	if parsed.String() != "https://downloads.example.invalid/reach-testbed-tool.bin" {
+	if parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return nil, errors.New("source url is not allowlisted")
+	}
+	if parsed.Hostname() != "downloads.example.invalid" || parsed.Port() != "" || parsed.Path != "/reach-testbed-tool.bin" {
 		return nil, errors.New("source url is not allowlisted")
 	}
 

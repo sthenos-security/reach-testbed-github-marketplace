@@ -69,6 +69,20 @@ func TestFetchTool_RejectsNonHTTPSURL(t *testing.T) {
 	}
 }
 
+func TestFetchTool_RejectsURLWithUserInfo(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url=https://user@downloads.example.invalid/reach-testbed-tool.bin", nil)
+	rec := httptest.NewRecorder()
+
+	FetchTool(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	}
+	if strings.TrimSpace(rec.Body.String()) != "bad request" {
+		t.Fatalf("expected generic bad request response, got %q", rec.Body.String())
+	}
+}
+
 func TestFetchTool_AllowlistedURLWritesTool(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url=https://downloads.example.invalid/reach-testbed-tool.bin", nil)
 	rec := httptest.NewRecorder()
