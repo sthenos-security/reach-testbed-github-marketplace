@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import subprocess
 from datetime import datetime, timezone
@@ -135,7 +136,17 @@ def _db_summary(db_path: Path) -> dict[str, Any]:
                 """
             ).fetchone()
             if row:
-                summary["latest_scan"] = dict(row)
+                summary["latest_scan"] = {
+                    "id": _safe_int(row["id"]),
+                    "branch": _safe_text(row["branch"], limit=64),
+                    "commit_short": _safe_text(row["commit_short"], limit=32),
+                    "commit_hash": _safe_text(row["commit_hash"], limit=64),
+                    "timestamp": _safe_text(row["timestamp"], limit=48),
+                    "version": _safe_text(row["version"], limit=32),
+                    "status": _safe_text(row["status"], limit=24),
+                    "total_findings": _safe_int(row["total_findings"]),
+                    "reachable_findings": _safe_int(row["reachable_findings"]),
+                }
         except sqlite3.OperationalError:
             summary["latest_scan"] = {}
         for table in ("scans", "signals", "ai_bom_entries", "taint_flows"):
@@ -154,6 +165,27 @@ def _scan_session_count(home: Path) -> int:
     if not scans.exists():
         return 0
     return sum(1 for p in scans.glob("*/*/20*") if p.is_dir())
+
+
+_EMAIL = re.compile(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}")
+_SSN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
+_LONG_DIGITS = re.compile(r"\b\d{13,19}\b")
+
+
+def _safe_text(value: Any, *, limit: int) -> str:
+    text = str(value or "").replace("\r", " ").replace("\n", " ").strip()
+    if _EMAIL.search(text) or _SSN.search(text) or _LONG_DIGITS.search(text):
+        return "[redacted]"
+    if len(text) > limit:
+        return text[:limit]
+    return text
+
+
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
 
 
 def _du_kb(path: Path | None) -> int:

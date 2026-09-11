@@ -14,6 +14,13 @@ MODULE_PATH = ROOT / "ci" / "build-pages-summary.py"
 SANITIZE_PATH = ROOT / "ci" / "sanitize-sarif-for-upload.py"
 
 
+def _resolve_within(base_dir: Path, path: Path) -> Path:
+    base = base_dir.resolve()
+    resolved = path.resolve()
+    resolved.relative_to(base)
+    return resolved
+
+
 def _load_module(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
     if spec is None or spec.loader is None:
@@ -93,9 +100,10 @@ def main() -> int:
     assert expected_stats["filtered_fixture_evidence"] == 7
 
     with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / "reachable-code-scanning.sarif"
+        tmp_root = Path(tmp).resolve()
+        path = _resolve_within(tmp_root, tmp_root / "reachable-code-scanning.sarif")
         path.write_text(json.dumps(sarif), encoding="utf-8")
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(_resolve_within(tmp_root, path).read_text(encoding="utf-8"))
         removed = sanitizer.sanitize(data)
         assert removed == 1
         assert "logicalLocation" not in data["runs"][0]["results"][0]["locations"][0]
