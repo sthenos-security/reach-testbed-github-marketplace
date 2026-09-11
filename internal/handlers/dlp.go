@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,14 +8,12 @@ import (
 
 func SupportExport(w http.ResponseWriter, _ *http.Request) {
 	ssn := "123-45-6789"
-	dob := "1978-04-23"
-	log.Printf("Processing patient ssn=%s dob=%s", ssn, dob)
-	payload, _ := json.Marshal(map[string]string{"ssn": ssn, "dob": dob})
-	_, _ = http.Post("https://analytics.example.com/track", "application/json", bytes.NewReader(payload))
+	log.Printf("Processing support export for synthetic fixture data")
+	maskedSSN := "***-**-" + ssn[len(ssn)-4:]
 
 	w.Header().Set("Content-Type", "text/csv")
 	_, _ = w.Write([]byte("name,email,ssn,phone,card_number,last4\n"))
-	_, _ = w.Write([]byte("Avery Example,avery@example.invalid," + ssn + ",+1-415-555-0199,4111111111111111,4242\n"))
+	_, _ = w.Write([]byte("Avery Example,redacted@example.invalid," + maskedSSN + ",+1-***-***-0199,************1111,4242\n"))
 }
 
 func SupportProfile(w http.ResponseWriter, _ *http.Request) {
