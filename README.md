@@ -1,5 +1,11 @@
 # ΣREACHABLE — Risk Exposure Reduction for GitHub Actions
 
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-REACHABLE-blue?logo=github)](https://github.com/marketplace/actions/reachable-risk-exposure-reduction)
+[![Release](https://img.shields.io/github/v/release/sthenos-security/reach-testbed-github-marketplace?display_name=tag&label=action)](https://github.com/sthenos-security/reach-testbed-github-marketplace/releases/latest)
+[![CI](https://github.com/sthenos-security/reach-testbed-github-marketplace/actions/workflows/reachable-remediate.yml/badge.svg)](https://github.com/sthenos-security/reach-testbed-github-marketplace/actions/workflows/reachable-remediate.yml)
+[![REACHABLE](https://img.shields.io/badge/scanner-v1.0.0b198-informational)](https://github.com/sthenos-security/reach-dist/releases/tag/v1.0.0b198)
+[![License](https://img.shields.io/badge/license-proprietary-lightgrey)](https://sthenosec.com/)
+
 > **Early access (beta).** REACHABLE is in active beta: scanner releases ship
 > continuously, and the CI integration surfaces are stable — "Beta" in the
 > GitLab maturity sense (near-complete, supported, breaking changes announced
