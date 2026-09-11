@@ -205,6 +205,8 @@ def _safe_text(
 
 
 def _safe_int(value: Any) -> int:
+    if isinstance(value, bool):
+        return 0
     try:
         return int(value)
     except (TypeError, ValueError, OverflowError):
