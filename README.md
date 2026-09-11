@@ -12,16 +12,16 @@
 > in advance). Early-adopter feedback shapes the product:
 > <support@sthenosec.com>.
 
-**AI SAST with reachability-verified findings and proposed fix PRs, by
+**AI SAST/SCA with reachability-verified findings and proposed fix PRs, by
 [Sthenos Security](https://sthenosec.com).**
 
-REACHABLE is **AI SAST** for GitHub Actions: SAST, dependency/CVE, secret, DLP,
-CI/CD workflow, and AI/LLM security scanning — then goes further than a
-scanner: it proves which vulnerabilities are actually **reachable and
-exploitable** in your code paths, uploads **SARIF to GitHub code scanning**,
-publishes a proof-backed report, and can **propose fixes** as reviewable
-branches and pull requests using OpenAI Codex, Anthropic Claude, or hosted
-GitHub Copilot.
+REACHABLE is **AI SAST/SCA** for GitHub Actions: first-party SAST plus
+dependency/CVE (SCA), secret, DLP, CI/CD workflow, and AI/LLM security
+scanning — then goes further than a scanner: it proves which vulnerabilities
+are actually **reachable and exploitable** in your code paths, uploads
+**SARIF to GitHub code scanning**, publishes a proof-backed report, and can
+**propose fixes** as reviewable branches and pull requests using OpenAI
+Codex, Anthropic Claude, or hosted GitHub Copilot.
 
 **REACHABLE does not merge.** A human reviews and merges — or you hand the PR
 to Copilot or any other merge tool you already trust. That matches how Snyk,
