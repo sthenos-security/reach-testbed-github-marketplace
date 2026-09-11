@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -93,11 +92,7 @@ func TestFetchTool_AllowlistedURLWritesTool(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
-	targetName := strings.TrimSpace(rec.Body.String())
-	if strings.Contains(targetName, "/") {
-		t.Fatalf("expected opaque filename, got %q", targetName)
-	}
-	target := filepath.Join(os.TempDir(), targetName)
+	target := strings.TrimSpace(rec.Body.String())
 	t.Cleanup(func() {
 		_ = os.Remove(target)
 	})
@@ -107,6 +102,29 @@ func TestFetchTool_AllowlistedURLWritesTool(t *testing.T) {
 	}
 	if string(content) != "synthetic tool payload\n" {
 		t.Fatalf("unexpected file content: %q", string(content))
+	}
+}
+
+func TestFetchTool_AllowlistedURLUsesUniqueFiles(t *testing.T) {
+	req1 := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url=https://downloads.example.invalid/reach-testbed-tool.bin", nil)
+	rec1 := httptest.NewRecorder()
+	FetchTool(rec1, req1)
+
+	req2 := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url=https://downloads.example.invalid/reach-testbed-tool.bin", nil)
+	rec2 := httptest.NewRecorder()
+	FetchTool(rec2, req2)
+
+	if rec1.Code != http.StatusOK || rec2.Code != http.StatusOK {
+		t.Fatalf("expected both responses to be 200, got %d and %d", rec1.Code, rec2.Code)
+	}
+	target1 := strings.TrimSpace(rec1.Body.String())
+	target2 := strings.TrimSpace(rec2.Body.String())
+	t.Cleanup(func() {
+		_ = os.Remove(target1)
+		_ = os.Remove(target2)
+	})
+	if target1 == target2 {
+		t.Fatalf("expected unique tool file paths, got %q", target1)
 	}
 }
 

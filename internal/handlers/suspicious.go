@@ -9,7 +9,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
@@ -44,7 +43,7 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, _ = w.Write([]byte(filepath.Base(target) + "\n"))
+	_, _ = w.Write([]byte(target + "\n"))
 }
 
 func toolPayloadForSource(source string) (io.Reader, error) {
