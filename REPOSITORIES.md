@@ -18,8 +18,8 @@ full remediation and scan-only runs with remediation disabled.
 
 | Surface | Primary role | GitHub equivalent |
 |---|---|---|
-| [`reachable` Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reach-testbed-gitlab-catalog) | GitLab Catalog component for customer installation. | GitHub Marketplace action |
-| [`reach-testbed-gitlab-catalog`](https://gitlab.com/sthenos-security-public/reach-testbed-gitlab-catalog) | GitLab CI/CD Catalog repo plus the Catalog component source. | `reach-testbed-github-marketplace` |
+| [`REACHABLE Risk Exposure Reduction` Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reachable-risk-exposure-reduction) | GitLab Catalog component for customer installation. | GitHub Marketplace action |
+| [`reachable-risk-exposure-reduction`](https://gitlab.com/sthenos-security-public/reachable-risk-exposure-reduction) | GitLab CI/CD Catalog repo plus the Catalog component source. | `reach-testbed-github-marketplace` |
 | [`reach-ci-gitlab`](https://gitlab.com/sthenos-security-public/reach-ci-gitlab) | Reusable GitLab remediation toolkit. | `reach-ci-github` |
 | [`reach-testbed-gitlab-go`](https://gitlab.com/sthenos-security-public/reach-testbed-gitlab-go) | Public GitLab demo repo. | `reach-testbed-github-go` |
 
@@ -31,7 +31,7 @@ Distribution surface
         |
         v
 Distribution repo
-  reach-testbed-github-marketplace / reach-testbed-gitlab-catalog
+  reach-testbed-github-marketplace / reachable-risk-exposure-reduction
         |
         v
 Reusable toolkit

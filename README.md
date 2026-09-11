@@ -67,7 +67,7 @@ GitLab catalog repo importing `reach-ci-gitlab`.
 | Repo | Role |
 |------|------|
 | [`REACHABLE Risk Exposure Reduction`](https://github.com/marketplace/actions/reachable-risk-exposure-reduction) | GitHub Marketplace action for customer installation |
-| [`reachable` GitLab Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reach-testbed-gitlab-catalog) | GitLab Catalog component for customer installation |
+| [`REACHABLE Risk Exposure Reduction` Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reachable-risk-exposure-reduction) | GitLab Catalog component for customer installation |
 | `reach-testbed-github-marketplace` | GitHub Marketplace distribution repo plus the configurable root action |
 | `reach-ci-github` | Reusable GitHub remediation toolkit |
 | `reach-testbed-github-go` | Public GitHub demo repo with explicit provider workflows and scan-only mode |
@@ -81,7 +81,7 @@ Use the public entrypoint for your CI/CD platform:
 | Platform | Entrypoint | Purpose |
 |----------|------------|---------|
 | GitHub Actions | [REACHABLE Risk Exposure Reduction](https://github.com/marketplace/actions/reachable-risk-exposure-reduction) | Marketplace action for proof-backed risk exposure reduction in GitHub Actions |
-| GitLab CI/CD | [`reachable` Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reach-testbed-gitlab-catalog) | Catalog component for proof-backed risk exposure reduction in GitLab CI/CD |
+| GitLab CI/CD | [`REACHABLE Risk Exposure Reduction` Catalog component](https://gitlab.com/explore/catalog/sthenos-security-public/reachable-risk-exposure-reduction) | Catalog component for proof-backed risk exposure reduction in GitLab CI/CD |
 
 ## GitHub Marketplace Action
 
