@@ -4,16 +4,31 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"unicode"
 )
 
 func SupportExport(w http.ResponseWriter, _ *http.Request) {
 	ssn := "123-45-6789"
 	log.Printf("Processing support export for synthetic fixture data")
-	maskedSSN := "***-**-" + ssn[len(ssn)-4:]
+	maskedSSN := maskLast4(ssn)
 
 	w.Header().Set("Content-Type", "text/csv")
 	_, _ = w.Write([]byte("name,email,ssn,phone,card_number,last4\n"))
 	_, _ = w.Write([]byte("Avery Example,redacted@example.invalid," + maskedSSN + ",+1-***-***-0199,************4242,4242\n"))
+}
+
+func maskLast4(value string) string {
+	last4 := make([]rune, 0, 4)
+	for i := len(value) - 1; i >= 0 && len(last4) < 4; i-- {
+		r := rune(value[i])
+		if unicode.IsDigit(r) {
+			last4 = append(last4, r)
+		}
+	}
+	if len(last4) < 4 {
+		return "***-**-****"
+	}
+	return "***-**-" + string([]rune{last4[3], last4[2], last4[1], last4[0]})
 }
 
 func SupportProfile(w http.ResponseWriter, _ *http.Request) {

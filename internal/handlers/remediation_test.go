@@ -83,6 +83,22 @@ func TestFetchTool_RejectsURLWithUserInfo(t *testing.T) {
 	}
 }
 
+func TestFetchTool_RejectsDisallowedURLVariants(t *testing.T) {
+	cases := []string{
+		"/admin/fetch-tool?url=https://downloads.example.invalid/reach-testbed-tool.bin?extra=1",
+		"/admin/fetch-tool?url=https://downloads.example.invalid:444/reach-testbed-tool.bin",
+		"/admin/fetch-tool?url=https://downloads.example.invalid/wrong-path.bin",
+	}
+	for _, target := range cases {
+		req := httptest.NewRequest(http.MethodGet, target, nil)
+		rec := httptest.NewRecorder()
+		FetchTool(rec, req)
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("expected status %d for %q, got %d", http.StatusBadRequest, target, rec.Code)
+		}
+	}
+}
+
 func TestFetchTool_AllowlistedURLWritesTool(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url=https://downloads.example.invalid/reach-testbed-tool.bin", nil)
 	rec := httptest.NewRecorder()
@@ -99,6 +115,13 @@ func TestFetchTool_AllowlistedURLWritesTool(t *testing.T) {
 	content, err := os.ReadFile(target)
 	if err != nil {
 		t.Fatalf("read target file: %v", err)
+	}
+	info, err := os.Stat(target)
+	if err != nil {
+		t.Fatalf("stat target file: %v", err)
+	}
+	if info.Mode().Perm() != 0o600 {
+		t.Fatalf("expected mode 0600, got %o", info.Mode().Perm())
 	}
 	if string(content) != "synthetic tool payload\n" {
 		t.Fatalf("unexpected file content: %q", string(content))
