@@ -13,7 +13,7 @@ func SupportExport(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "text/csv")
 	_, _ = w.Write([]byte("name,email,ssn,phone,card_number,last4\n"))
-	_, _ = w.Write([]byte("Avery Example,redacted@example.invalid," + maskedSSN + ",+1-***-***-0199,************1111,4242\n"))
+	_, _ = w.Write([]byte("Avery Example,redacted@example.invalid," + maskedSSN + ",+1-***-***-0199,************4242,4242\n"))
 }
 
 func SupportProfile(w http.ResponseWriter, _ *http.Request) {

@@ -144,6 +144,9 @@ func TestSupportExport_RedactsPIIAndKeepsCSV(t *testing.T) {
 	if strings.Contains(body, "123-45-6789") || strings.Contains(body, "4111111111111111") {
 		t.Fatalf("expected redacted sensitive values, got %q", body)
 	}
+	if !strings.Contains(body, "************4242,4242") {
+		t.Fatalf("expected consistent card redaction and last4, got %q", body)
+	}
 }
 
 func TestParseYAML_GenericClientError(t *testing.T) {
