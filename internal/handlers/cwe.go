@@ -1,32 +1,39 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/reachable/reach-testbed-github-marketplace/internal/safety"
 )
 
-var resolvePingPath = trustedPingPath
-
 func DiagnosticPing(w http.ResponseWriter, r *http.Request) {
+	diagnosticPing(w, r, trustedPingPath)
+}
+
+func diagnosticPing(w http.ResponseWriter, r *http.Request, resolver func() (string, error)) {
 	host := r.URL.Query().Get("host")
 	if !safety.AllowedHostname(host) {
 		http.Error(w, "invalid host", http.StatusBadRequest)
 		return
 	}
 
-	pingPath, err := resolvePingPath()
+	pingPath, err := resolver()
 	if err != nil {
 		log.Printf("diagnostic ping unavailable: %v", err)
 		http.Error(w, "diagnostic failed", http.StatusBadGateway)
 		return
 	}
 
-	out, err := exec.CommandContext(r.Context(), pingPath, "-c", "1", host).CombinedOutput()
+	cmdCtx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+
+	out, err := exec.CommandContext(cmdCtx, pingPath, "-c", "1", host).CombinedOutput()
 	if err != nil {
 		log.Printf("diagnostic ping failed: %v", err)
 		http.Error(w, "diagnostic failed", http.StatusBadGateway)

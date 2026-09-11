@@ -17,7 +17,9 @@ func TestDiagnosticPingRejectsInvalidHost(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/diagnostics/ping?"+query.Encode(), nil)
 	rr := httptest.NewRecorder()
 
-	DiagnosticPing(rr, req)
+	diagnosticPing(rr, req, func() (string, error) {
+		return "/bin/ping", nil
+	})
 
 	if rr.Code != http.StatusBadRequest {
 		t.Fatalf("expected %d, got %d", http.StatusBadRequest, rr.Code)
@@ -32,21 +34,14 @@ func TestDiagnosticPingAcceptsValidHost(t *testing.T) {
 		t.Fatalf("failed to write ping stub: %v", err)
 	}
 
-	originalResolvePingPath := resolvePingPath
-	resolvePingPath = func() (string, error) {
-		return pingPath, nil
-	}
-	t.Cleanup(func() {
-		resolvePingPath = originalResolvePingPath
-	})
-
 	query := url.Values{}
 	query.Set("host", "example.com")
 
 	req := httptest.NewRequest(http.MethodGet, "/diagnostics/ping?"+query.Encode(), nil)
 	rr := httptest.NewRecorder()
-
-	DiagnosticPing(rr, req)
+	diagnosticPing(rr, req, func() (string, error) {
+		return pingPath, nil
+	})
 
 	if rr.Code != http.StatusOK {
 		t.Fatalf("expected %d, got %d, body=%q", http.StatusOK, rr.Code, rr.Body.String())
