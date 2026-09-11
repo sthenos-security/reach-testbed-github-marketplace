@@ -29,6 +29,7 @@ def main() -> int:
     assert mod._safe_text("4111111111111111", limit=64, redact_long_digits=False) == "4111111111111111"
     assert mod._safe_int("7") == 7
     assert mod._safe_int("not-a-number") == 0
+    assert mod._safe_int(float("inf")) == 0
     print("Reachable cache evidence smoke passed")
     return 0
 

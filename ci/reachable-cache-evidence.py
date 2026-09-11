@@ -197,17 +197,17 @@ def _safe_text(
     text = raw.replace("\r", " ").replace("\n", " ").strip()
     if _EMAIL.search(text) or _SSN.search(text) or (redact_long_digits and _LONG_DIGITS.search(text)):
         return "[redacted]"
-    if len(text) > limit:
-        text = text[:limit]
     if allow_pattern and text and not allow_pattern.fullmatch(text):
         return "[redacted]"
+    if len(text) > limit:
+        text = text[:limit]
     return text
 
 
 def _safe_int(value: Any) -> int:
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return 0
 
 
