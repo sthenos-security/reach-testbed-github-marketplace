@@ -1,6 +1,6 @@
 name: REACHABLE Risk Exposure Reduction
 author: Sthenos Security
-description: AI SAST/SCA with reachability and exploitability proof. Proposes fix PRs (Codex/Claude/Copilot). You merge.
+description: Early access (beta). AI SAST/SCA with reachability and exploitability proof. Proposes fix PRs. You merge.
 
 branding:
   icon: shield

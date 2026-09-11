@@ -2,6 +2,7 @@
 
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-REACHABLE-blue?logo=github)](https://github.com/marketplace/actions/reachable-risk-exposure-reduction)
 [![Release](https://img.shields.io/github/v/release/sthenos-security/reach-testbed-github-marketplace?display_name=tag&label=action)](https://github.com/sthenos-security/reach-testbed-github-marketplace/releases/latest)
+[![Status](https://img.shields.io/badge/status-early%20access%20(beta)-orange)](https://github.com/sthenos-security/reach-testbed-github-marketplace#Σreachable--risk-exposure-reduction-for-github-actions)
 [![CI](https://github.com/sthenos-security/reach-testbed-github-marketplace/actions/workflows/reachable-remediate.yml/badge.svg)](https://github.com/sthenos-security/reach-testbed-github-marketplace/actions/workflows/reachable-remediate.yml)
 [![REACHABLE](https://img.shields.io/badge/scanner-v1.0.0b198-informational)](https://github.com/sthenos-security/reach-dist/releases/tag/v1.0.0b198)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](https://sthenosec.com/)
