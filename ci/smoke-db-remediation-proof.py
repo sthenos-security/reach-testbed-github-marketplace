@@ -17,8 +17,16 @@ CHECKER = ROOT / "ci" / "check-db-remediation-proof.py"
 EXPECTED = ROOT / "expected" / "baseline.json"
 
 
+def _resolve_within(base_dir: Path, path: Path) -> Path:
+    base = base_dir.resolve()
+    resolved = path.resolve()
+    resolved.relative_to(base)
+    return resolved
+
+
 def _write_expected(path: Path) -> None:
-    path.write_text(
+    safe_path = _resolve_within(path.parent, path)
+    safe_path.write_text(
         json.dumps(
             {
                 "schema_version": 1,
@@ -277,7 +285,8 @@ def _run_case(
     )
     print(result.stdout, end="")
     print(result.stderr, end="", file=sys.stderr)
-    verdict = json.loads((artifact_dir / "db-remediation-verdict.json").read_text(encoding="utf-8"))
+    verdict_path = _resolve_within(artifact_dir, artifact_dir / "db-remediation-verdict.json")
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
     if blocking_after or not baseline_present:
         return 0 if result.returncode == 3 and not verdict["clean"] else 1
     return 0 if result.returncode == 0 and verdict["clean"] else 1
