@@ -7,15 +7,19 @@
 > <support@sthenosec.com>.
 
 **AI-powered application security scanning with reachability-verified findings
-and reviewable auto-remediation, by [Sthenos Security](https://sthenosec.com).**
+and proposed fix PRs, by [Sthenos Security](https://sthenosec.com).**
 
 REACHABLE runs SAST, dependency/CVE, secret, DLP, CI/CD workflow, and AI/LLM
 security scanning inside GitHub Actions — then goes further than a scanner:
 it proves which vulnerabilities are actually **reachable and exploitable** in
 your code paths, uploads **SARIF to GitHub code scanning**, publishes a
-proof-backed report page, and can open reviewable **auto-remediation**
-branches and pull requests using OpenAI Codex, Anthropic Claude, or hosted
-GitHub Copilot.
+proof-backed report, and can **propose fixes** as reviewable branches and pull
+requests using OpenAI Codex, Anthropic Claude, or hosted GitHub Copilot.
+
+**REACHABLE does not merge.** A human reviews and merges — or you hand the PR
+to Copilot or any other merge tool you already trust. That matches how Snyk,
+Semgrep Autofix, and GitHub Copilot Autofix deliver fixes: propose in git,
+keep change control with the team.
 
 Install from the GitHub Marketplace:
 [**REACHABLE Risk Exposure Reduction**](https://github.com/marketplace/actions/reachable-risk-exposure-reduction).
@@ -23,19 +27,21 @@ Install from the GitHub Marketplace:
 This repository is the public Marketplace distribution surface for REACHABLE
 on GitHub. It uses the reusable
 [`reach-ci-github`](https://github.com/sthenos-security/reach-ci-github)
-toolkit and defaults to the Codex remediation lane while still allowing the
-user to switch AI modes.
+toolkit and defaults to the Codex lane while still allowing the caller to
+switch AI modes.
 
-As of REACHABLE `v1.0.0b121`, the Marketplace action can also dispatch the
-hosted GitHub Copilot remediation campaign. Copilot is an async lane: REACHABLE
-creates bounded tasks from DB-backed remediation shards, Copilot opens
-reviewable PRs, and REACHABLE verifier/parity workflows prove the aggregate
-blocker cleanup before merge.
+With hosted Copilot (`ai-mode: copilot-github`), REACHABLE scopes what is worth
+fixing from the proof-backed scan, then dispatches bounded Copilot tasks that
+open reviewable PRs. GitHub's own Copilot Autofix can fix code-scanning alerts
+the same way (draft PRs); REACHABLE's difference is **which** findings become
+proposals — reachability and exploitability first — across more than CodeQL
+alerts alone.
 
 `ΣREACHABLE` is the visual brand mark. The searchable Marketplace action name
 is `REACHABLE Risk Exposure Reduction`, and configuration examples
 use `REACHABLE` / `reachable` names so users can find and install the action
 without typing the sigma character.
+
 
 The repository also exposes a root GitHub Action metadata file,
 [`action.yml`](action.yml), so GitHub can list REACHABLE in the Actions
@@ -141,8 +147,8 @@ validate the action wiring without scanner or agent execution.
 
 The runnable Go demos still live in
 [`reach-testbed-github-go`](https://github.com/sthenos-security/reach-testbed-github-go),
-including the public Copilot campaign verifier/parity workflow used to prove
-the multi-PR campaign path.
+including optional Copilot PR verifier/parity workflows if you want
+post-proposal proof that a PR closed the selected blockers.
 
 ## CI/CD Demo Examples
 
@@ -177,7 +183,7 @@ Use these links when you need options beyond the default Marketplace snippet:
 | Need | Link |
 |------|------|
 | Sthenos Security landing page | [sthenosec.com](https://sthenosec.com/) |
-| Public guide and provider map | [CI auto-remediation on sthenosec.com](https://sthenosec.com/resources/auto-remediation) |
+| Public guide and provider map | [CI remediae on sthenosec.com](https://sthenosec.com/resources/auto-remediation) |
 | Input defaults | [Defaults](#defaults) |
 | AI provider and coding-agent lanes | [AI Modes](#ai-modes) |
 | Required GitHub Actions secrets | [Token Setup](#token-setup) |
@@ -227,8 +233,9 @@ write token.
 
 For `ai-mode=copilot-github`, also enable GitHub Copilot coding agent for the
 repository and configure `REACHABLE_COPILOT_USER_TOKEN` as an Actions secret.
-That token is used only to dispatch bounded Copilot tasks. It is not an
-auto-merge token. If you provide read-only REACHABLE MCP context to hosted
+That token is used only to dispatch bounded Copilot tasks. It is not a merge
+token — merge stays with your reviewers or whatever merge automation you
+attach later. If you provide read-only REACHABLE MCP context to hosted
 Copilot, configure `COPILOT_MCP_REACHABLE_TOKEN` in the Copilot Agents secret
 plane as well.
 
@@ -239,27 +246,29 @@ artifacts, and Pages, while `MCP_GITHUB_TOKEN` stays read-only source context.
 ## CI Agent Trust Model
 
 This Marketplace repo is the public GitHub reference and demo surface. The
-synchronous Codex/Claude lanes run the selected coding agent non-interactively
-with repository write authority on a generated remediation branch; the
-`copilot-github` lane dispatches hosted GitHub Copilot tasks that produce
-reviewable PRs. That is expected for the reference path. The trust boundary is
-the GitHub workflow and repository policy: protected branches, trusted runners,
-masked provider keys, `GITHUB_TOKEN` permissions, fork-workflow approval, and
-human review before merge. Do not run code-changing remediation from untrusted
-forks or workflows that can expose CI secrets.
+product contract is **scan and propose**, not land on `main`:
+
+- Codex/Claude: bounded agent edits on a remediation branch, then a reviewable PR
+- Copilot: hosted tasks that open reviewable PRs
+- Merge: always outside REACHABLE — human review, Copilot, or your merge bot
+
+The trust boundary is the GitHub workflow and repository policy: protected
+branches, trusted runners, masked provider keys, `GITHUB_TOKEN` permissions,
+fork-workflow approval, and review before merge. Do not run code-changing
+proposal lanes from untrusted forks or workflows that can expose CI secrets.
 
 ## Defaults
 
-The Marketplace action defaults to the remediation path:
+The Marketplace action defaults to scan + propose fixes:
 
 | Workflow input | Default | Purpose |
 |----------------|---------|---------|
-| `ai-mode` | `openai-codex` | Default OpenAI + Codex remediation lane. |
-| `remediate` | `true` | Run code-changing remediation by default. |
-| `rescan-only` | `false` | Run the full baseline, remediation, proof-scan flow. |
+| `ai-mode` | `openai-codex` | Default OpenAI + Codex proposal lane. |
+| `remediate` | `true` | Propose code fixes by default (does not merge). |
+| `rescan-only` | `false` | Run baseline, proposal, and proof-scan flow. |
 | `fail-on` | `exploitable` | Customer-facing scan/proof threshold. |
-| `proof-fail-on` | `fail-on` when empty | Post-remediation proof threshold. |
-| `create-pr` | `true` | Open a remediation PR after the branch is pushed. |
+| `proof-fail-on` | `fail-on` when empty | Post-proposal proof threshold when that path runs. |
+| `create-pr` | `true` | Open a reviewable PR after the branch is pushed. |
 | `publish-report` | `true` | Build the proof page and structured exports. |
 | `publish-pages` | `false` | Leave Pages off unless the caller explicitly wants deployment. |
 
@@ -270,12 +279,12 @@ handling.
 
 ## AI Modes
 
-| `ai-mode` | Required key | Reachable scan provider | Remediation coding agent |
-|-----------|--------------|-------------------------|--------------------------|
-| `openai-gpt` | `OPENAI_API_KEY` | OpenAI | Not allowed when remediation is enabled |
+| `ai-mode` | Required key | Reachable scan provider | Fix-proposal agent |
+|-----------|--------------|-------------------------|--------------------|
+| `openai-gpt` | `OPENAI_API_KEY` | OpenAI | Not allowed when `remediate=true` |
 | `openai-codex` | `OPENAI_API_KEY` | OpenAI | Codex |
 | `anthropic-claude` | `ANTHROPIC_API_KEY` | Anthropic / Claude | Claude Code |
-| `copilot-github` | `REACHABLE_COPILOT_USER_TOKEN` | No local scan AI provider | Hosted GitHub Copilot campaign |
+| `copilot-github` | `REACHABLE_COPILOT_USER_TOKEN` | No local scan AI provider | Hosted GitHub Copilot |
 
 The Marketplace action delegates to `reach-ci-github@v1`, which sanitizes the
 inputs before invoking `reachctl`. Scan jobs derive exactly one provider
@@ -283,36 +292,34 @@ argument from `ai-mode`: `--ai-provider openai` for `openai-gpt` and
 `openai-codex`, or `--ai-provider claude` for `anthropic-claude`. When
 `remediate=true`, `openai-gpt` fails fast with a clear scan-only error.
 
-`copilot-github` is different from the synchronous Codex and Claude lanes. It
-uses the same REACHABLE remediation bundle logic, then dispatches one bounded
-hosted Copilot task per remediation shard. A campaign can therefore create
-multiple Copilot PRs. Each PR must pass REACHABLE verification, and the campaign
-parity check must show no unresolved release-blocking signals before the
-campaign is considered ready.
+`copilot-github` is async: REACHABLE builds the same remediae bundle, then
+dispatches one bounded hosted Copilot task per shard. A run can therefore open
+**multiple reviewable Copilot PRs**. That is the supported Marketplace outcome —
+propose fixes. Optional verifier/parity workflows in the Go demo repo can prove
+a PR closed selected blockers later; they are not required to claim “we scanned
+and proposed fixes.”
 
 ## Copilot Campaign Lane
 
-The Copilot campaign is review-first. The Marketplace action does not
-auto-merge Copilot branches. Customers can add a separate merge policy later,
-but the supported default is:
+Review-first, same as GitHub’s own Autofix PRs:
 
-- shard by REACHABLE priority and remediation affinity
+- shard by REACHABLE priority and remediae affinity
 - dispatch one hosted Copilot task per shard
-- review one Copilot PR per task
-- verify every PR with REACHABLE
-- accept the campaign only after aggregate parity proof is clean
+- open one reviewable PR per task
+- **you** merge (or ask Copilot / another tool to merge)
+
+REACHABLE does not auto-merge. Optional post-merge or per-PR verification is a
+separate proof step if you want it.
 
 ## Expected Result
 
 When a customer calls this Marketplace action from their own workflow, it
-identifies the exposure that matters, creates a `reachable-remediate-*` branch
-for synchronous Codex/Claude remediation, runs the selected coding agent with
-bounded instructions, rescans that branch for proof, publishes sanitized
-evidence, and opens a pull request when GitHub allows automatic PR creation.
-For `copilot-github`, it dispatches hosted Copilot remediation tasks and
-publishes the task/proof artifacts needed by the verifier/parity workflows.
+identifies the exposure that matters and **proposes** fixes: a
+`reachable-remediate-*` branch plus PR for Codex/Claude, or hosted Copilot
+tasks that open reviewable PRs. It publishes sanitized evidence (SARIF, report
+artifacts). Merge is never performed by this action.
 
-The REACHABLE evidence database is the source of truth for the demo verdict.
+The REACHABLE evidence database is the source of truth for the scan verdict.
 SARIF is generated for platform compatibility, but it is only an export report.
 
 ## Public Evidence
@@ -328,7 +335,7 @@ The Marketplace action produces the same sanitized artifacts as
 | `reachable-report.json` | Structured Reachable findings export when available. |
 | `reachable-summary.txt` | Plain-text Reachable summary when available. |
 | `copilot-dispatch.json` | Hosted Copilot task dispatch receipt when `ai-mode=copilot-github`. |
-| `copilot-tasks.repo.db` | DB-backed task evidence needed by later Copilot PR verification. |
+| `copilot-tasks.repo.db` | DB-backed task evidence (optional later PR verification). |
 
 The action must not publish raw remediation bundles, prompt text, generated
 rule packs, agent transcripts, raw witnesses, or local databases.

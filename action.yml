@@ -1,6 +1,6 @@
 name: REACHABLE Risk Exposure Reduction
 author: Sthenos Security
-description: Proof-backed risk exposure reduction for GitHub Actions, with Codex, Claude, and hosted Copilot remediation lanes.
+description: Proof-backed AppSec scan that proposes reviewable fix PRs via Codex, Claude, or Copilot. You merge.
 
 branding:
   icon: shield
@@ -12,7 +12,7 @@ inputs:
     required: false
     default: ""
   remediate:
-    description: Run code-changing remediation instead of a read-only proof scan.
+    description: Propose code fixes (branch/PR or Copilot tasks) instead of a read-only proof scan. Does not merge.
     required: false
     default: "true"
   rescan-only:
@@ -64,7 +64,7 @@ inputs:
     required: false
     default: real
   create-pr:
-    description: Open a remediation PR when a branch is pushed successfully.
+    description: Open a reviewable remediation PR when a branch is pushed. Merge stays with humans or their tools.
     required: false
     default: "true"
   publish-report:
