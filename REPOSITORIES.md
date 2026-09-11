@@ -1,5 +1,8 @@
 # REACHABLE GitHub And GitLab Repositories
 
+> **Canonical public grid:** [sthenos-security/.github/REACHABLE-REPOSITORIES.md](https://github.com/sthenos-security/.github/blob/main/REACHABLE-REPOSITORIES.md) (public surfaces only).
+
+
 This file explains the public CI/CD repository layout. The GitHub and GitLab
 sets are intentionally symmetrical: each ecosystem has a user-facing
 distribution surface, a reusable toolkit, and a Go demo repo that covers both
