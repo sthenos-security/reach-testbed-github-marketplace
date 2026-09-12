@@ -47,7 +47,6 @@ func fetchTool(w http.ResponseWriter, r *http.Request, client *http.Client) {
 		writeClientError(w, r, http.StatusInternalServerError, "internal error", err, "create fetched tool temp file")
 		return
 	}
-	defer out.Close()
 	target := out.Name()
 
 	written, err := io.Copy(out, io.LimitReader(resp.Body, toolSizeLimit+1))
@@ -61,6 +60,11 @@ func fetchTool(w http.ResponseWriter, r *http.Request, client *http.Client) {
 		_ = out.Close()
 		_ = os.Remove(target)
 		writeClientError(w, r, http.StatusBadGateway, "bad gateway", fmt.Errorf("trusted tool exceeds %d bytes", toolSizeLimit), "fetch trusted tool")
+		return
+	}
+	if err := out.Close(); err != nil {
+		_ = os.Remove(target)
+		writeClientError(w, r, http.StatusInternalServerError, "internal error", err, "finalize fetched tool file")
 		return
 	}
 
@@ -80,6 +84,9 @@ func stagedDropper() error {
 }
 
 func allowedToolURL(raw string) bool {
+	if raw != trustedToolURL {
+		return false
+	}
 	parsed, err := url.Parse(raw)
 	if err != nil {
 		return false

@@ -256,6 +256,7 @@ func TestFetchToolRejectsUntrustedURL(t *testing.T) {
 		"http://169.254.169.254/latest/meta-data",
 		"https://user@downloads.example.invalid/reach-testbed-tool.bin",
 		"https://downloads.example.invalid:443/reach-testbed-tool.bin",
+		"https://downloads.example.invalid/%72each-testbed-tool.bin",
 		"https://downloads.example.invalid/reach-testbed-tool.bin?dl=1",
 		"https://downloads.example.invalid/reach-testbed-tool.bin#frag",
 		"https://downloads.example.invalid/other.bin",
