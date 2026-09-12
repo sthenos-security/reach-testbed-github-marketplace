@@ -6,15 +6,18 @@ from pathlib import Path
 def resolve_within(root: Path, candidate: Path) -> Path:
     resolved_root = root.resolve()
     candidate = candidate if candidate.is_absolute() else resolved_root / candidate
-    try:
-        if candidate.exists():
-            resolved_candidate = candidate.resolve(strict=True)
-        else:
+    if candidate.exists():
+        resolved_candidate = candidate.resolve(strict=True)
+    else:
+        try:
             resolved_parent = candidate.parent.resolve(strict=True)
+        except FileNotFoundError as exc:
+            raise ValueError(f"parent path does not exist: {candidate.parent}") from exc
+        try:
             resolved_parent.relative_to(resolved_root)
-            resolved_candidate = resolved_parent / candidate.name
-    except (FileNotFoundError, ValueError) as exc:
-        raise ValueError(f"path escapes repository root: {candidate}") from exc
+        except ValueError as exc:
+            raise ValueError(f"path escapes repository root: {candidate}") from exc
+        resolved_candidate = resolved_parent / candidate.name
     try:
         resolved_candidate.relative_to(resolved_root)
     except ValueError as exc:

@@ -19,17 +19,20 @@ from path_safety import resolve_within
 MAX_DESCRIPTION = 125  # GitHub: "Description must be less than 125 characters."
 
 
-def _load_action(root: Path) -> tuple[dict, Path | None, list[str]]:
+def _load_action(root: Path) -> tuple[dict, list[str]]:
     try:
         action_path = resolve_within(root, root / "action.yml")
-        readme_path = resolve_within(root, root / "README.md")
     except ValueError as exc:
-        return {}, None, [str(exc)]
-    return yaml.safe_load(action_path.read_text(encoding="utf-8")), readme_path, []
+        return {}, [str(exc)]
+    try:
+        action = yaml.safe_load(action_path.read_text(encoding="utf-8")) or {}
+    except FileNotFoundError:
+        return {}, ["action.yml is missing"]
+    return action, []
 
 
 def validate_metadata(root: Path) -> tuple[dict, list[str]]:
-    action, readme_path, load_errors = _load_action(root)
+    action, load_errors = _load_action(root)
     errors = list(load_errors)
     name = action.get("name") or ""
     if not name.strip():
@@ -49,8 +52,17 @@ def validate_metadata(root: Path) -> tuple[dict, list[str]]:
         if not str(branding.get(field) or "").strip():
             errors.append(f"branding.{field} is missing; Marketplace publish requires it")
 
-    if readme_path is None or not readme_path.is_file():
+    readme_candidate = root / "README.md"
+    if not readme_candidate.exists():
         errors.append("README.md is missing; Marketplace publish requires one")
+    else:
+        try:
+            readme_path = resolve_within(root, readme_candidate)
+        except ValueError as exc:
+            errors.append(str(exc))
+        else:
+            if not readme_path.is_file():
+                errors.append("README.md is missing; Marketplace publish requires one")
     return action, errors
 
 
