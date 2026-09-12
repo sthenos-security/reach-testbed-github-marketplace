@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 type roundTripperFunc func(*http.Request) (*http.Response, error)
@@ -241,24 +243,33 @@ func TestFetchToolRejectsUntrustedURL(t *testing.T) {
 }
 
 func TestFetchToolPreservesTrustedDownloadFlow(t *testing.T) {
-	originalTransport := http.DefaultTransport
-	http.DefaultTransport = roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		if req.URL.String() != trustedToolURL {
-			t.Fatalf("unexpected outbound URL %q", req.URL.String())
-		}
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(strings.NewReader("tool-binary")),
-			Header:     make(http.Header),
-		}, nil
-	})
-	defer func() { http.DefaultTransport = originalTransport }()
+	type contextKey string
+
+	originalClient := trustedToolClient
+	trustedToolClient = &http.Client{
+		Timeout: 5 * time.Second,
+		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.String() != trustedToolURL {
+				t.Fatalf("unexpected outbound URL %q", req.URL.String())
+			}
+			if got := req.Context().Value(contextKey("trace")); got != "fetch-tool" {
+				t.Fatalf("expected request context value to be preserved, got %v", got)
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader("tool-binary")),
+				Header:     make(http.Header),
+			}, nil
+		}),
+	}
+	defer func() { trustedToolClient = originalClient }()
 
 	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
 	_ = os.Remove(target)
 	t.Cleanup(func() { _ = os.Remove(target) })
 
 	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url="+url.QueryEscape(trustedToolURL), nil)
+	req = req.WithContext(context.WithValue(req.Context(), contextKey("trace"), "fetch-tool"))
 	rec := httptest.NewRecorder()
 
 	FetchTool(rec, req)
@@ -279,19 +290,22 @@ func TestFetchToolPreservesTrustedDownloadFlow(t *testing.T) {
 }
 
 func TestFetchToolRejectsTrustedUpstreamFailure(t *testing.T) {
-	originalTransport := http.DefaultTransport
-	http.DefaultTransport = roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		if req.URL.String() != trustedToolURL {
-			t.Fatalf("unexpected outbound URL %q", req.URL.String())
-		}
-		return &http.Response{
-			StatusCode: http.StatusBadGateway,
-			Status:     "502 Bad Gateway",
-			Body:       io.NopCloser(strings.NewReader("upstream error")),
-			Header:     make(http.Header),
-		}, nil
-	})
-	defer func() { http.DefaultTransport = originalTransport }()
+	originalClient := trustedToolClient
+	trustedToolClient = &http.Client{
+		Timeout: 5 * time.Second,
+		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.String() != trustedToolURL {
+				t.Fatalf("unexpected outbound URL %q", req.URL.String())
+			}
+			return &http.Response{
+				StatusCode: http.StatusBadGateway,
+				Status:     "502 Bad Gateway",
+				Body:       io.NopCloser(strings.NewReader("upstream error")),
+				Header:     make(http.Header),
+			}, nil
+		}),
+	}
+	defer func() { trustedToolClient = originalClient }()
 
 	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
 	_ = os.Remove(target)
