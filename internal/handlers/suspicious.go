@@ -2,15 +2,19 @@ package handlers
 
 import (
 	"encoding/base64"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 const trustedToolURL = "https://downloads.example.invalid/reach-testbed-tool.bin"
+
+var trustedToolClient = &http.Client{Timeout: 5 * time.Second}
 
 func FetchTool(w http.ResponseWriter, r *http.Request) {
 	source := r.URL.Query().Get("url")
@@ -19,12 +23,22 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := http.Get(trustedToolURL)
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, trustedToolURL, nil)
+	if err != nil {
+		writeClientError(w, r, http.StatusInternalServerError, "internal error", err, "build trusted tool request")
+		return
+	}
+
+	resp, err := trustedToolClient.Do(req)
 	if err != nil {
 		writeClientError(w, r, http.StatusBadGateway, "bad gateway", err, "fetch trusted tool")
 		return
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		writeClientError(w, r, http.StatusBadGateway, "bad gateway", fmt.Errorf("unexpected status %s", resp.Status), "fetch trusted tool")
+		return
+	}
 
 	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
 	out, err := os.Create(target)

@@ -14,7 +14,7 @@ func DiagnosticPing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, err := exec.Command("ping", "-c", "1", host).CombinedOutput()
+	out, err := exec.CommandContext(r.Context(), "ping", "-c", "1", host).CombinedOutput()
 	if err != nil {
 		writeClientError(w, r, http.StatusBadGateway, "bad gateway", err, "run diagnostic ping")
 		return
@@ -30,7 +30,7 @@ func SafeDiagnosticPing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, err := exec.Command("ping", "-c", "1", host).CombinedOutput()
+	out, err := exec.CommandContext(r.Context(), "ping", "-c", "1", host).CombinedOutput()
 	if err != nil {
 		writeClientError(w, r, http.StatusBadGateway, "bad gateway", err, "run safe diagnostic ping")
 		return

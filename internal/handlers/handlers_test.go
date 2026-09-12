@@ -277,3 +277,38 @@ func TestFetchToolPreservesTrustedDownloadFlow(t *testing.T) {
 		t.Fatalf("expected stored tool contents, got %q", string(data))
 	}
 }
+
+func TestFetchToolRejectsTrustedUpstreamFailure(t *testing.T) {
+	originalTransport := http.DefaultTransport
+	http.DefaultTransport = roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.URL.String() != trustedToolURL {
+			t.Fatalf("unexpected outbound URL %q", req.URL.String())
+		}
+		return &http.Response{
+			StatusCode: http.StatusBadGateway,
+			Status:     "502 Bad Gateway",
+			Body:       io.NopCloser(strings.NewReader("upstream error")),
+			Header:     make(http.Header),
+		}, nil
+	})
+	defer func() { http.DefaultTransport = originalTransport }()
+
+	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
+	_ = os.Remove(target)
+	t.Cleanup(func() { _ = os.Remove(target) })
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url="+url.QueryEscape(trustedToolURL), nil)
+	rec := httptest.NewRecorder()
+
+	FetchTool(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected status %d, got %d", http.StatusBadGateway, rec.Code)
+	}
+	if got := rec.Body.String(); got != "bad gateway\n" {
+		t.Fatalf("expected generic bad gateway body, got %q", got)
+	}
+	if _, err := os.Stat(target); !os.IsNotExist(err) {
+		t.Fatalf("expected no stored file on upstream failure, stat err=%v", err)
+	}
+}
