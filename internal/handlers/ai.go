@@ -18,7 +18,7 @@ type agentRequest struct {
 func AIAnswer(w http.ResponseWriter, r *http.Request) {
 	var req promptRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeClientError(w, r, http.StatusBadRequest, "bad request", err, "decode ai answer request")
 		return
 	}
 
@@ -36,7 +36,7 @@ func AIAnswer(w http.ResponseWriter, r *http.Request) {
 func AIAgentPlan(w http.ResponseWriter, r *http.Request) {
 	var req agentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeClientError(w, r, http.StatusBadRequest, "bad request", err, "decode ai agent plan request")
 		return
 	}
 
@@ -58,7 +58,7 @@ func AIAgentPlan(w http.ResponseWriter, r *http.Request) {
 func SafeAIAnswer(w http.ResponseWriter, r *http.Request) {
 	var req promptRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeClientError(w, r, http.StatusBadRequest, "bad request", err, "decode safe ai answer request")
 		return
 	}
 	if strings.Contains(strings.ToLower(req.Question), "ignore previous") {

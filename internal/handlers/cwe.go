@@ -9,9 +9,14 @@ import (
 
 func DiagnosticPing(w http.ResponseWriter, r *http.Request) {
 	host := r.URL.Query().Get("host")
-	out, err := exec.Command("sh", "-c", "ping -c 1 "+host).CombinedOutput()
+	if !safety.AllowedHostname(host) {
+		http.Error(w, "invalid host", http.StatusBadRequest)
+		return
+	}
+
+	out, err := exec.Command("ping", "-c", "1", host).CombinedOutput()
 	if err != nil {
-		http.Error(w, string(out), http.StatusBadGateway)
+		writeClientError(w, r, http.StatusBadGateway, "bad gateway", err, "run diagnostic ping")
 		return
 	}
 
@@ -27,7 +32,7 @@ func SafeDiagnosticPing(w http.ResponseWriter, r *http.Request) {
 
 	out, err := exec.Command("ping", "-c", "1", host).CombinedOutput()
 	if err != nil {
-		http.Error(w, string(out), http.StatusBadGateway)
+		writeClientError(w, r, http.StatusBadGateway, "bad gateway", err, "run safe diagnostic ping")
 		return
 	}
 

@@ -1266,7 +1266,10 @@ def _repo_relative_uri(uri: str) -> str:
     if repo:
         marker = f"/{repo}/"
         if marker in normalized:
-            return normalized.split(marker, 1)[1]
+            relative = normalized.split(marker, 1)[1]
+            if relative.startswith(f"{repo}/"):
+                return relative.split(f"{repo}/", 1)[1]
+            return relative
     for marker in ("/work/", "/builds/"):
         if marker in normalized:
             tail = normalized.split(marker, 1)[1]
