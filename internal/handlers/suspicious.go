@@ -8,15 +8,16 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"time"
 )
 
 const trustedToolURL = "https://downloads.example.invalid/reach-testbed-tool.bin"
 
-var trustedToolClient = &http.Client{Timeout: 5 * time.Second}
-
 func FetchTool(w http.ResponseWriter, r *http.Request) {
+	fetchTool(w, r, &http.Client{Timeout: 5 * time.Second})
+}
+
+func fetchTool(w http.ResponseWriter, r *http.Request, client *http.Client) {
 	source := r.URL.Query().Get("url")
 	if !allowedToolURL(source) {
 		http.Error(w, "invalid tool URL", http.StatusBadRequest)
@@ -29,7 +30,7 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := trustedToolClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		writeClientError(w, r, http.StatusBadGateway, "bad gateway", err, "fetch trusted tool")
 		return
@@ -40,13 +41,13 @@ func FetchTool(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
-	out, err := os.Create(target)
+	out, err := os.CreateTemp(os.TempDir(), "reach-testbed-tool-*.bin")
 	if err != nil {
-		writeClientError(w, r, http.StatusInternalServerError, "internal error", err, "create fetched tool file")
+		writeClientError(w, r, http.StatusInternalServerError, "internal error", err, "create fetched tool temp file")
 		return
 	}
 	defer out.Close()
+	target := out.Name()
 
 	if _, err := io.Copy(out, io.LimitReader(resp.Body, 2<<20)); err != nil {
 		writeClientError(w, r, http.StatusInternalServerError, "internal error", err, "store fetched tool file")

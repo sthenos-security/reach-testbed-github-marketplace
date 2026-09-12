@@ -34,8 +34,7 @@ func TestAIAnswerRejectsMalformedJSON(t *testing.T) {
 }
 
 func TestAIAnswerPreservesPromptResponse(t *testing.T) {
-	originalTransport := http.DefaultTransport
-	http.DefaultTransport = roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		if req.URL.String() != "https://api.openai.com/v1/chat/completions" {
 			t.Fatalf("unexpected outbound URL %q", req.URL.String())
 		}
@@ -44,13 +43,12 @@ func TestAIAnswerPreservesPromptResponse(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(`{}`)),
 			Header:     make(http.Header),
 		}, nil
-	})
-	defer func() { http.DefaultTransport = originalTransport }()
+	})}
 
 	req := httptest.NewRequest(http.MethodPost, "/ai/answer", strings.NewReader(`{"question":"Where is payroll?"}`))
 	rec := httptest.NewRecorder()
 
-	AIAnswer(rec, req)
+	aiAnswer(rec, req, client, "https://api.openai.com/v1/chat/completions")
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
@@ -76,8 +74,7 @@ func TestAIAgentPlanRejectsMalformedJSON(t *testing.T) {
 }
 
 func TestAIAgentPlanPreservesPlanResponse(t *testing.T) {
-	originalTransport := http.DefaultTransport
-	http.DefaultTransport = roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+	client := &http.Client{Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 		if req.URL.String() != "https://api.openai.com/v1/chat/completions" {
 			t.Fatalf("unexpected outbound URL %q", req.URL.String())
 		}
@@ -86,13 +83,12 @@ func TestAIAgentPlanPreservesPlanResponse(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(`{}`)),
 			Header:     make(http.Header),
 		}, nil
-	})
-	defer func() { http.DefaultTransport = originalTransport }()
+	})}
 
 	req := httptest.NewRequest(http.MethodPost, "/ai/agent-plan", strings.NewReader(`{"task":"collect logs"}`))
 	rec := httptest.NewRecorder()
 
-	AIAgentPlan(rec, req)
+	aiAgentPlan(rec, req, client, "https://api.openai.com/v1/chat/completions")
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
@@ -255,24 +251,34 @@ func TestDiagnosticPingReturnsGenericErrorOnCanceledContext(t *testing.T) {
 }
 
 func TestFetchToolRejectsUntrustedURL(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url=http://169.254.169.254/latest/meta-data", nil)
-	rec := httptest.NewRecorder()
-
-	FetchTool(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, rec.Code)
+	testCases := []string{
+		"http://169.254.169.254/latest/meta-data",
+		"https://user@downloads.example.invalid/reach-testbed-tool.bin",
+		"https://downloads.example.invalid:443/reach-testbed-tool.bin",
+		"https://downloads.example.invalid/reach-testbed-tool.bin?dl=1",
+		"https://downloads.example.invalid/reach-testbed-tool.bin#frag",
+		"https://downloads.example.invalid/other.bin",
 	}
-	if got := rec.Body.String(); got != "invalid tool URL\n" {
-		t.Fatalf("expected invalid tool URL body, got %q", got)
+
+	for _, rawURL := range testCases {
+		req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url="+url.QueryEscape(rawURL), nil)
+		rec := httptest.NewRecorder()
+
+		FetchTool(rec, req)
+
+		if rec.Code != http.StatusBadRequest {
+			t.Fatalf("url %q: expected status %d, got %d", rawURL, http.StatusBadRequest, rec.Code)
+		}
+		if got := rec.Body.String(); got != "invalid tool URL\n" {
+			t.Fatalf("url %q: expected invalid tool URL body, got %q", rawURL, got)
+		}
 	}
 }
 
 func TestFetchToolPreservesTrustedDownloadFlow(t *testing.T) {
 	type contextKey string
 
-	originalClient := trustedToolClient
-	trustedToolClient = &http.Client{
+	client := &http.Client{
 		Timeout: 5 * time.Second,
 		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 			if req.URL.String() != trustedToolURL {
@@ -288,23 +294,21 @@ func TestFetchToolPreservesTrustedDownloadFlow(t *testing.T) {
 			}, nil
 		}),
 	}
-	defer func() { trustedToolClient = originalClient }()
-
-	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
-	_ = os.Remove(target)
-	t.Cleanup(func() { _ = os.Remove(target) })
+	tmpDir := t.TempDir()
+	t.Setenv("TMPDIR", tmpDir)
 
 	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url="+url.QueryEscape(trustedToolURL), nil)
 	req = req.WithContext(context.WithValue(req.Context(), contextKey("trace"), "fetch-tool"))
 	rec := httptest.NewRecorder()
 
-	FetchTool(rec, req)
+	fetchTool(rec, req, client)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, rec.Code)
 	}
-	if got := rec.Body.String(); got != target+"\n" {
-		t.Fatalf("expected target path response, got %q", got)
+	target := strings.TrimSpace(rec.Body.String())
+	if !strings.HasPrefix(target, filepath.Join(tmpDir, "reach-testbed-tool-")) || !strings.HasSuffix(target, ".bin") {
+		t.Fatalf("expected temporary tool path in %q, got %q", tmpDir, target)
 	}
 	data, err := os.ReadFile(target)
 	if err != nil {
@@ -316,8 +320,7 @@ func TestFetchToolPreservesTrustedDownloadFlow(t *testing.T) {
 }
 
 func TestFetchToolRejectsTrustedUpstreamFailure(t *testing.T) {
-	originalClient := trustedToolClient
-	trustedToolClient = &http.Client{
+	client := &http.Client{
 		Timeout: 5 * time.Second,
 		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
 			if req.URL.String() != trustedToolURL {
@@ -331,16 +334,13 @@ func TestFetchToolRejectsTrustedUpstreamFailure(t *testing.T) {
 			}, nil
 		}),
 	}
-	defer func() { trustedToolClient = originalClient }()
-
-	target := filepath.Join(os.TempDir(), "reach-testbed-tool.bin")
-	_ = os.Remove(target)
-	t.Cleanup(func() { _ = os.Remove(target) })
+	tmpDir := t.TempDir()
+	t.Setenv("TMPDIR", tmpDir)
 
 	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url="+url.QueryEscape(trustedToolURL), nil)
 	rec := httptest.NewRecorder()
 
-	FetchTool(rec, req)
+	fetchTool(rec, req, client)
 
 	if rec.Code != http.StatusBadGateway {
 		t.Fatalf("expected status %d, got %d", http.StatusBadGateway, rec.Code)
@@ -348,7 +348,11 @@ func TestFetchToolRejectsTrustedUpstreamFailure(t *testing.T) {
 	if got := rec.Body.String(); got != "bad gateway\n" {
 		t.Fatalf("expected generic bad gateway body, got %q", got)
 	}
-	if _, err := os.Stat(target); !os.IsNotExist(err) {
-		t.Fatalf("expected no stored file on upstream failure, stat err=%v", err)
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		t.Fatalf("read temp dir: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected no stored file on upstream failure, found %d entries", len(entries))
 	}
 }
