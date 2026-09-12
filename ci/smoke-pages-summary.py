@@ -112,6 +112,13 @@ def main() -> int:
         else:  # pragma: no cover - smoke contract
             raise AssertionError("expected symlink escape rejection")
 
+        try:
+            resolve_within(tmp_path, tmp_path / "missing-dir" / "outside-reachable-code-scanning.sarif")
+        except ValueError:
+            pass
+        else:  # pragma: no cover - smoke contract
+            raise AssertionError("expected missing parent rejection")
+
     print("Pages summary smoke passed")
     return 0
 

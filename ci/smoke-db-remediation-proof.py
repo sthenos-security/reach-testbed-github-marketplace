@@ -249,12 +249,13 @@ def _run_case(
     remove_scan_dirs: bool = False,
 ) -> int:
     artifact_dir = resolve_within(tmp, tmp / f"artifacts-{name}")
+    artifact_dir.mkdir(parents=True)
     reports = resolve_within(artifact_dir, artifact_dir / "reports")
     (reports / "baseline").mkdir(parents=True)
     (reports / "after-final").mkdir(parents=True)
     repo_root = resolve_within(tmp, tmp / f"repo-{name}")
-    db_path = resolve_within(repo_root, repo_root / "repo.db")
     repo_root.mkdir(parents=True)
+    db_path = resolve_within(repo_root, repo_root / "repo.db")
     baseline_dir, after_dir = _write_db(
         db_path,
         baseline_present=baseline_present,
