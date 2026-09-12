@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -16,9 +17,13 @@ type agentRequest struct {
 }
 
 func AIAnswer(w http.ResponseWriter, r *http.Request) {
+	aiAnswer(w, r, http.DefaultClient, "https://api.openai.com/v1/chat/completions")
+}
+
+func aiAnswer(w http.ResponseWriter, r *http.Request, client *http.Client, endpoint string) {
 	var req promptRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeClientError(w, r, http.StatusBadRequest, "bad request", err, "decode ai answer request")
 		return
 	}
 
@@ -29,14 +34,18 @@ func AIAnswer(w http.ResponseWriter, r *http.Request) {
 			{"role": "user", "content": prompt},
 		},
 	})
-	_, _ = http.Post("https://api.openai.com/v1/chat/completions", "application/json", bytes.NewReader(payload))
+	postJSON(r, client, endpoint, payload)
 	_ = json.NewEncoder(w).Encode(map[string]string{"prompt": prompt})
 }
 
 func AIAgentPlan(w http.ResponseWriter, r *http.Request) {
+	aiAgentPlan(w, r, http.DefaultClient, "https://api.openai.com/v1/chat/completions")
+}
+
+func aiAgentPlan(w http.ResponseWriter, r *http.Request, client *http.Client, endpoint string) {
 	var req agentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeClientError(w, r, http.StatusBadRequest, "bad request", err, "decode ai agent plan request")
 		return
 	}
 
@@ -48,7 +57,7 @@ func AIAgentPlan(w http.ResponseWriter, r *http.Request) {
 			{"role": "user", "content": toolSpec},
 		},
 	})
-	_, _ = http.Post("https://api.openai.com/v1/chat/completions", "application/json", bytes.NewReader(payload))
+	postJSON(r, client, endpoint, payload)
 	_ = json.NewEncoder(w).Encode(map[string]string{
 		"system_prompt": "You are an internal automation agent with admin context.",
 		"tool_spec":     toolSpec,
@@ -58,7 +67,7 @@ func AIAgentPlan(w http.ResponseWriter, r *http.Request) {
 func SafeAIAnswer(w http.ResponseWriter, r *http.Request) {
 	var req promptRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeClientError(w, r, http.StatusBadRequest, "bad request", err, "decode safe ai answer request")
 		return
 	}
 	if strings.Contains(strings.ToLower(req.Question), "ignore previous") {
@@ -73,4 +82,18 @@ func SafeAIAnswer(w http.ResponseWriter, r *http.Request) {
 func strconvQuote(value string) string {
 	escaped, _ := json.Marshal(value)
 	return string(escaped)
+}
+
+func postJSON(r *http.Request, client *http.Client, endpoint string, payload []byte) {
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, endpoint, bytes.NewReader(payload))
+	if err != nil {
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil || resp == nil {
+		return
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
 }
