@@ -53,16 +53,16 @@ def validate_metadata(root: Path) -> tuple[dict, list[str]]:
             errors.append(f"branding.{field} is missing; Marketplace publish requires it")
 
     readme_candidate = root / "README.md"
-    if not readme_candidate.exists():
-        errors.append("README.md is missing; Marketplace publish requires one")
-    else:
-        try:
-            readme_path = resolve_within(root, readme_candidate)
-        except ValueError as exc:
+    try:
+        readme_path = resolve_within(root, readme_candidate)
+    except ValueError as exc:
+        if readme_candidate.exists() or readme_candidate.is_symlink():
             errors.append(str(exc))
         else:
-            if not readme_path.is_file():
-                errors.append("README.md is missing; Marketplace publish requires one")
+            errors.append("README.md is missing; Marketplace publish requires one")
+    else:
+        if not readme_path.is_file():
+            errors.append("README.md is missing; Marketplace publish requires one")
     return action, errors
 
 
