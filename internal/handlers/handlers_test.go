@@ -228,6 +228,32 @@ func TestDiagnosticPingPreservesPingResponse(t *testing.T) {
 	}
 }
 
+func TestDiagnosticPingReturnsGenericErrorOnCanceledContext(t *testing.T) {
+	tempDir := t.TempDir()
+	pingPath := filepath.Join(tempDir, "ping")
+	if err := os.WriteFile(pingPath, []byte("#!/bin/sh\nsleep 1\n"), 0o755); err != nil {
+		t.Fatalf("write fake ping: %v", err)
+	}
+
+	originalPath := os.Getenv("PATH")
+	t.Setenv("PATH", tempDir+string(os.PathListSeparator)+originalPath)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	req := httptest.NewRequest(http.MethodGet, "/diagnostics/ping?host=example.com", nil).WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	DiagnosticPing(rec, req)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected status %d, got %d", http.StatusBadGateway, rec.Code)
+	}
+	if got := rec.Body.String(); got != "bad gateway\n" {
+		t.Fatalf("expected generic bad gateway body, got %q", got)
+	}
+}
+
 func TestFetchToolRejectsUntrustedURL(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url=http://169.254.169.254/latest/meta-data", nil)
 	rec := httptest.NewRecorder()
