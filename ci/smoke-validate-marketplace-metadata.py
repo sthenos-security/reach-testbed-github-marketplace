@@ -34,7 +34,8 @@ def main() -> int:
             encoding="utf-8",
         )
         (tmp / "README.md").write_text("# Demo\n", encoding="utf-8")
-        assert mod.validate_metadata(tmp) == []
+        _, errors = mod.validate_metadata(tmp)
+        assert errors == []
 
         outside = tmp.parent / "outside-action.yml"
         outside.write_text(
@@ -47,7 +48,7 @@ def main() -> int:
         )
         (tmp / "action.yml").unlink()
         (tmp / "action.yml").symlink_to(outside)
-        errors = mod.validate_metadata(tmp)
+        _, errors = mod.validate_metadata(tmp)
         assert any("path escapes repository root" in error for error in errors)
 
     print("Marketplace metadata smoke passed")

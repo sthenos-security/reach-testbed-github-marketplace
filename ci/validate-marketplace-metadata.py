@@ -19,16 +19,18 @@ from path_safety import resolve_within
 MAX_DESCRIPTION = 125  # GitHub: "Description must be less than 125 characters."
 
 
-def validate_metadata(root: Path) -> list[str]:
-    errors = []
+def _load_action(root: Path) -> tuple[dict, Path | None, list[str]]:
     try:
         action_path = resolve_within(root, root / "action.yml")
         readme_path = resolve_within(root, root / "README.md")
     except ValueError as exc:
-        return [str(exc)]
+        return {}, None, [str(exc)]
+    return yaml.safe_load(action_path.read_text(encoding="utf-8")), readme_path, []
 
-    action = yaml.safe_load(action_path.read_text(encoding="utf-8"))
 
+def validate_metadata(root: Path) -> tuple[dict, list[str]]:
+    action, readme_path, load_errors = _load_action(root)
+    errors = list(load_errors)
     name = action.get("name") or ""
     if not name.strip():
         errors.append("action.yml has no name; the name is the Marketplace listing identity")
@@ -47,20 +49,19 @@ def validate_metadata(root: Path) -> list[str]:
         if not str(branding.get(field) or "").strip():
             errors.append(f"branding.{field} is missing; Marketplace publish requires it")
 
-    if not readme_path.is_file():
+    if readme_path is None or not readme_path.is_file():
         errors.append("README.md is missing; Marketplace publish requires one")
-    return errors
+    return action, errors
 
 
 def main(root: Path | None = None) -> int:
     root = root or Path(__file__).resolve().parents[1]
-    errors = validate_metadata(root)
+    action, errors = validate_metadata(root)
 
     if errors:
         for error in errors:
             print(f"MARKETPLACE-BLOCKER: {error}", file=sys.stderr)
         return 1
-    action = yaml.safe_load(resolve_within(root, root / "action.yml").read_text(encoding="utf-8"))
     name = action.get("name") or ""
     description = action.get("description") or ""
     branding = action.get("branding") or {}

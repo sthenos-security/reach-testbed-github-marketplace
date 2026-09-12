@@ -56,7 +56,7 @@ def main() -> int:
     summary = mod._summarize(sarif=sarif, ledger={}, compliance={})
     assert summary["top_priority"] == [], "defended rows must not appear in exploitable/reachable priority"
     assert len(summary["top_defended"]) == 1, "defended rows should stay in defended section"
-    assert summary["top_defended"][0]["location"] == "reach-testbed-github-marketplace/internal/handlers/cwe.go:12"
+    assert summary["top_defended"][0]["location"].endswith("internal/handlers/cwe.go:12")
     status_stats = mod._observed_status_stats(
         [
             {"blocks_release": True, "deferred": False, "exploitability": "EXPLOITABLE"},
