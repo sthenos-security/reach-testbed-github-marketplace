@@ -12,13 +12,16 @@ import sys
 import tempfile
 from pathlib import Path
 
+from path_safety import resolve_within
+
 ROOT = Path(__file__).resolve().parents[1]
 CHECKER = ROOT / "ci" / "check-db-remediation-proof.py"
 EXPECTED = ROOT / "expected" / "baseline.json"
 
 
-def _write_expected(path: Path) -> None:
-    path.write_text(
+def _write_expected(root: Path, path: Path) -> None:
+    safe_path = resolve_within(root, path)
+    safe_path.write_text(
         json.dumps(
             {
                 "schema_version": 1,
@@ -245,12 +248,12 @@ def _run_case(
     exploit_verdict_defended_after: bool = False,
     remove_scan_dirs: bool = False,
 ) -> int:
-    artifact_dir = tmp / f"artifacts-{name}"
-    reports = artifact_dir / "reports"
+    artifact_dir = resolve_within(tmp, tmp / f"artifacts-{name}")
+    reports = resolve_within(artifact_dir, artifact_dir / "reports")
     (reports / "baseline").mkdir(parents=True)
     (reports / "after-final").mkdir(parents=True)
-    repo_root = tmp / f"repo-{name}"
-    db_path = repo_root / "repo.db"
+    repo_root = resolve_within(tmp, tmp / f"repo-{name}")
+    db_path = resolve_within(repo_root, repo_root / "repo.db")
     repo_root.mkdir(parents=True)
     baseline_dir, after_dir = _write_db(
         db_path,
@@ -262,8 +265,8 @@ def _run_case(
     if remove_scan_dirs:
         shutil.rmtree(baseline_dir)
         shutil.rmtree(after_dir)
-    (reports / "baseline" / "scan-path.txt").write_text(str(baseline_dir), encoding="utf-8")
-    (reports / "after-final" / "scan-path.txt").write_text(str(after_dir), encoding="utf-8")
+    resolve_within(reports, reports / "baseline" / "scan-path.txt").write_text(str(baseline_dir), encoding="utf-8")
+    resolve_within(reports, reports / "after-final" / "scan-path.txt").write_text(str(after_dir), encoding="utf-8")
     env = os.environ.copy()
     env["REACHABLE_EXPECTED_CONTRACT"] = str(expected_path)
     result = subprocess.run(
@@ -277,7 +280,8 @@ def _run_case(
     )
     print(result.stdout, end="")
     print(result.stderr, end="", file=sys.stderr)
-    verdict = json.loads((artifact_dir / "db-remediation-verdict.json").read_text(encoding="utf-8"))
+    verdict_path = resolve_within(artifact_dir, artifact_dir / "db-remediation-verdict.json")
+    verdict = json.loads(verdict_path.read_text(encoding="utf-8"))
     if blocking_after or not baseline_present:
         return 0 if result.returncode == 3 and not verdict["clean"] else 1
     return 0 if result.returncode == 0 and verdict["clean"] else 1
@@ -290,7 +294,15 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="reachable-db-proof-") as raw:
         tmp = Path(raw)
         expected_path = tmp / "expected.json"
-        _write_expected(expected_path)
+        _write_expected(tmp, expected_path)
+        escape = tmp / "escape"
+        escape.symlink_to(tmp.parent, target_is_directory=True)
+        try:
+            _write_expected(tmp, escape / "outside-expected.json")
+        except ValueError:
+            pass
+        else:  # pragma: no cover - smoke contract
+            raise AssertionError("expected symlink escape rejection")
         pass_status = _run_case(
             tmp,
             expected_path=expected_path,

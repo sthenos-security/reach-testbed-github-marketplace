@@ -14,13 +14,20 @@ from pathlib import Path
 
 import yaml
 
+from path_safety import resolve_within
+
 MAX_DESCRIPTION = 125  # GitHub: "Description must be less than 125 characters."
 
 
-def main() -> int:
-    root = Path(__file__).resolve().parents[1]
-    action = yaml.safe_load((root / "action.yml").read_text())
+def validate_metadata(root: Path) -> list[str]:
     errors = []
+    try:
+        action_path = resolve_within(root, root / "action.yml")
+        readme_path = resolve_within(root, root / "README.md")
+    except ValueError as exc:
+        return [str(exc)]
+
+    action = yaml.safe_load(action_path.read_text(encoding="utf-8"))
 
     name = action.get("name") or ""
     if not name.strip():
@@ -40,13 +47,23 @@ def main() -> int:
         if not str(branding.get(field) or "").strip():
             errors.append(f"branding.{field} is missing; Marketplace publish requires it")
 
-    if not (root / "README.md").is_file():
+    if not readme_path.is_file():
         errors.append("README.md is missing; Marketplace publish requires one")
+    return errors
+
+
+def main(root: Path | None = None) -> int:
+    root = root or Path(__file__).resolve().parents[1]
+    errors = validate_metadata(root)
 
     if errors:
         for error in errors:
             print(f"MARKETPLACE-BLOCKER: {error}", file=sys.stderr)
         return 1
+    action = yaml.safe_load(resolve_within(root, root / "action.yml").read_text(encoding="utf-8"))
+    name = action.get("name") or ""
+    description = action.get("description") or ""
+    branding = action.get("branding") or {}
     print(
         f"marketplace metadata ok: name={name!r}, description "
         f"{len(description)}/{MAX_DESCRIPTION - 1} chars, branding "

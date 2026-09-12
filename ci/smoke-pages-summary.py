@@ -8,6 +8,8 @@ import json
 import tempfile
 from pathlib import Path
 
+from path_safety import resolve_within
+
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = ROOT / "ci" / "build-pages-summary.py"
@@ -54,7 +56,7 @@ def main() -> int:
     summary = mod._summarize(sarif=sarif, ledger={}, compliance={})
     assert summary["top_priority"] == [], "defended rows must not appear in exploitable/reachable priority"
     assert len(summary["top_defended"]) == 1, "defended rows should stay in defended section"
-    assert summary["top_defended"][0]["location"] == "internal/handlers/cwe.go:12"
+    assert summary["top_defended"][0]["location"] == "reach-testbed-github-marketplace/internal/handlers/cwe.go:12"
     status_stats = mod._observed_status_stats(
         [
             {"blocks_release": True, "deferred": False, "exploitability": "EXPLOITABLE"},
@@ -93,12 +95,22 @@ def main() -> int:
     assert expected_stats["filtered_fixture_evidence"] == 7
 
     with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / "reachable-code-scanning.sarif"
+        tmp_path = Path(tmp).resolve()
+        path = resolve_within(tmp_path, tmp_path / "reachable-code-scanning.sarif")
         path.write_text(json.dumps(sarif), encoding="utf-8")
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(resolve_within(tmp_path, path).read_text(encoding="utf-8"))
         removed = sanitizer.sanitize(data)
         assert removed == 1
         assert "logicalLocation" not in data["runs"][0]["results"][0]["locations"][0]
+
+        escape = tmp_path / "escape"
+        escape.symlink_to(tmp_path.parent, target_is_directory=True)
+        try:
+            resolve_within(tmp_path, escape / "outside-reachable-code-scanning.sarif")
+        except ValueError:
+            pass
+        else:  # pragma: no cover - smoke contract
+            raise AssertionError("expected symlink escape rejection")
 
     print("Pages summary smoke passed")
     return 0

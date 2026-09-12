@@ -7,11 +7,15 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+MAX_DB_TEXT = 256
+_SAFE_TEXT = re.compile(r"[\r\n\t]+")
 
 
 def main() -> int:
@@ -135,7 +139,17 @@ def _db_summary(db_path: Path) -> dict[str, Any]:
                 """
             ).fetchone()
             if row:
-                summary["latest_scan"] = dict(row)
+                summary["latest_scan"] = {
+                    "id": int(row["id"]),
+                    "branch": _sanitize_db_text(row["branch"]),
+                    "commit_short": _sanitize_db_text(row["commit_short"], limit=64),
+                    "commit_hash": _sanitize_db_text(row["commit_hash"], limit=128),
+                    "timestamp": _sanitize_db_text(row["timestamp"], limit=64),
+                    "version": _sanitize_db_text(row["version"], limit=64),
+                    "status": _sanitize_db_text(row["status"], limit=64),
+                    "total_findings": int(row["total_findings"]),
+                    "reachable_findings": int(row["reachable_findings"]),
+                }
         except sqlite3.OperationalError:
             summary["latest_scan"] = {}
         for table in ("scans", "signals", "ai_bom_entries", "taint_flows"):
@@ -145,8 +159,15 @@ def _db_summary(db_path: Path) -> dict[str, Any]:
                 summary[f"{table}_count"] = 0
         con.close()
     except Exception as exc:  # pragma: no cover - CI evidence helper
-        summary["error"] = str(exc)
+        summary["error"] = _sanitize_db_text(str(exc), limit=160)
     return summary
+
+
+def _sanitize_db_text(value: Any, *, limit: int = MAX_DB_TEXT) -> str:
+    text = _SAFE_TEXT.sub(" ", str(value or ""))
+    text = "".join(ch for ch in text if ch.isprintable())
+    text = " ".join(text.split())
+    return text[:limit]
 
 
 def _scan_session_count(home: Path) -> int:

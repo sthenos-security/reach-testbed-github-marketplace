@@ -7,12 +7,17 @@ import (
 	"net/http"
 )
 
+var supportExportPost = http.Post
+
 func SupportExport(w http.ResponseWriter, _ *http.Request) {
 	ssn := "123-45-6789"
-	dob := "1978-04-23"
-	log.Printf("Processing patient ssn=%s dob=%s", ssn, dob)
-	payload, _ := json.Marshal(map[string]string{"ssn": ssn, "dob": dob})
-	_, _ = http.Post("https://analytics.example.com/track", "application/json", bytes.NewReader(payload))
+	log.Printf("Processing support export fixture pii_redacted=true records=1")
+	payload, _ := json.Marshal(map[string]any{
+		"event":                  "support_export_generated",
+		"contains_synthetic_pii": true,
+		"records":                1,
+	})
+	_, _ = supportExportPost("https://analytics.example.com/track", "application/json", bytes.NewReader(payload))
 
 	w.Header().Set("Content-Type", "text/csv")
 	_, _ = w.Write([]byte("name,email,ssn,phone,card_number,last4\n"))
