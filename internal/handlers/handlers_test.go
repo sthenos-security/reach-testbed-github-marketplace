@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net/http"
@@ -354,5 +355,42 @@ func TestFetchToolRejectsTrustedUpstreamFailure(t *testing.T) {
 	}
 	if len(entries) != 0 {
 		t.Fatalf("expected no stored file on upstream failure, found %d entries", len(entries))
+	}
+}
+
+func TestFetchToolRejectsOversizedTrustedResponse(t *testing.T) {
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			if req.URL.String() != trustedToolURL {
+				t.Fatalf("unexpected outbound URL %q", req.URL.String())
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewReader(bytes.Repeat([]byte("a"), toolSizeLimit+1))),
+				Header:     make(http.Header),
+			}, nil
+		}),
+	}
+	tmpDir := t.TempDir()
+	t.Setenv("TMPDIR", tmpDir)
+
+	req := httptest.NewRequest(http.MethodGet, "/admin/fetch-tool?url="+url.QueryEscape(trustedToolURL), nil)
+	rec := httptest.NewRecorder()
+
+	fetchTool(rec, req, client)
+
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected status %d, got %d", http.StatusBadGateway, rec.Code)
+	}
+	if got := rec.Body.String(); got != "bad gateway\n" {
+		t.Fatalf("expected generic bad gateway body, got %q", got)
+	}
+	entries, err := os.ReadDir(tmpDir)
+	if err != nil {
+		t.Fatalf("read temp dir: %v", err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected no stored file on oversized response, found %d entries", len(entries))
 	}
 }

@@ -12,6 +12,7 @@ import (
 )
 
 const trustedToolURL = "https://downloads.example.invalid/reach-testbed-tool.bin"
+const toolSizeLimit = 2 << 20
 
 func FetchTool(w http.ResponseWriter, r *http.Request) {
 	fetchTool(w, r, &http.Client{Timeout: 5 * time.Second})
@@ -49,8 +50,17 @@ func fetchTool(w http.ResponseWriter, r *http.Request, client *http.Client) {
 	defer out.Close()
 	target := out.Name()
 
-	if _, err := io.Copy(out, io.LimitReader(resp.Body, 2<<20)); err != nil {
+	written, err := io.Copy(out, io.LimitReader(resp.Body, toolSizeLimit+1))
+	if err != nil {
+		_ = out.Close()
+		_ = os.Remove(target)
 		writeClientError(w, r, http.StatusInternalServerError, "internal error", err, "store fetched tool file")
+		return
+	}
+	if written > toolSizeLimit {
+		_ = out.Close()
+		_ = os.Remove(target)
+		writeClientError(w, r, http.StatusBadGateway, "bad gateway", fmt.Errorf("trusted tool exceeds %d bytes", toolSizeLimit), "fetch trusted tool")
 		return
 	}
 
