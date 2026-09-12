@@ -7,18 +7,25 @@ import (
 )
 
 const syntheticServiceToken = "rtg_live_synthetic_token_1234567890"
-const syntheticAWSAccessKeyID = "AKIAIOSFODNN7EXAMPLE"
-const syntheticGitHubToken = "ghp_reachtestbedsynthetic000000000000000000"
 
 func ServiceToken(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write([]byte(syntheticServiceToken + "\n"))
 }
 
 func CloudTokens(w http.ResponseWriter, _ *http.Request) {
-	// Synthetic fixture values only. These are not real credentials.
+	awsAccessKeyStatus := "not_configured"
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" {
+		awsAccessKeyStatus = "configured"
+	}
+
+	githubTokenStatus := "not_configured"
+	if os.Getenv("REACH_TESTBED_GITHUB_TOKEN") != "" {
+		githubTokenStatus = "configured"
+	}
+
 	_ = json.NewEncoder(w).Encode(map[string]string{
-		"aws_access_key_id": syntheticAWSAccessKeyID,
-		"github_token":      syntheticGitHubToken,
+		"aws_access_key_id": awsAccessKeyStatus,
+		"github_token":      githubTokenStatus,
 	})
 }
 
