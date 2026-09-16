@@ -17,9 +17,17 @@ import yaml
 MAX_DESCRIPTION = 125  # GitHub: "Description must be less than 125 characters."
 
 
+def _resolve_within(base_dir: Path, path: Path) -> Path:
+    base = base_dir.resolve()
+    resolved = path.resolve()
+    resolved.relative_to(base)
+    return resolved
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
-    action = yaml.safe_load((root / "action.yml").read_text())
+    action_path = _resolve_within(root, root / "action.yml")
+    action = yaml.safe_load(action_path.read_text(encoding="utf-8"))
     errors = []
 
     name = action.get("name") or ""
