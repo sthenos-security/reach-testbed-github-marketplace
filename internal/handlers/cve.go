@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/reachable/reach-testbed-github-marketplace/internal/safety"
@@ -13,13 +14,15 @@ import (
 func ParseYAML(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(io.LimitReader(r.Body, 1<<20))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("handler=ParseYAML op=read_body request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
 	var decoded map[string]any
 	if err := yaml.Unmarshal(body, &decoded); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("handler=ParseYAML op=unmarshal_yaml request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
@@ -35,7 +38,8 @@ func ParseLanguage(w http.ResponseWriter, r *http.Request) {
 
 	parsed, err := language.Parse(tag)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("handler=ParseLanguage op=parse_language request_id=%q err=%v", r.Header.Get("X-Request-ID"), err)
+		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
