@@ -1,0 +1,14 @@
+REACHABLE Risk Exposure Reduction for GitHub Actions
+Copyright 2026 Sthenos Security, Inc.
+
+This repository (the Marketplace action wrapper, example workflows and the
+intentionally vulnerable demo application) is licensed under the Apache
+License, Version 2.0. See LICENSE.
+
+It calls the REACHABLE GitHub toolkit (sthenos-security/reach-ci-github) and
+installs the REACHABLE scanner. Neither is covered by this license; each is
+governed by its own license terms.
+
+"REACHABLE", "Sthenos" and "Sthenos Security" are trademarks of Sthenos
+Security, Inc. The Apache License does not grant permission to use them
+(Apache License 2.0, Section 6).
